@@ -1,0 +1,163 @@
+.nav-link {
+  display: flex;
+  padding: 0.72rem 0.8rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  text-decoration: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.nav-link small {
+  font-size: 0.65rem;
+}
+
+.nav-link:hover,
+.nav-link.is-active {
+  border-color: var(--border);
+  color: var(--text);
+  background: var(--surface);
+}
+
+.nav-link.is-active small {
+  color: var(--primary);
+}
+
+.button {
+  display: inline-flex;
+  min-height: 2.75rem;
+  padding: 0.7rem 1rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 800;
+  text-decoration: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.button--primary {
+  color: #090d16;
+  background: var(--primary);
+}
+
+.button--secondary,
+.button--ghost {
+  border-color: var(--border-strong);
+  color: var(--text);
+  background: rgba(17, 24, 39, 0.6);
+}
+
+.button--ghost {
+  min-height: 2.35rem;
+  padding: 0.45rem 0.8rem;
+  font-size: 0.78rem;
+}
+
+.status-dot {
+  width: 0.58rem;
+  height: 0.58rem;
+  border-radius: 999px;
+  background: var(--warning);
+  box-shadow: 0 0 0.75rem currentColor;
+}
+
+.status-dot[data-status='online'] {
+  color: var(--success);
+  background: currentColor;
+}
+
+.status-dot[data-status='offline'] {
+  color: var(--danger);
+  background: currentColor;
+}
+
+.capability-grid,
+.phase-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.capability-card,
+.phase-card,
+.error-panel {
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.capability-card {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.capability-card p,
+.capability-card small {
+  display: block;
+  margin: 0;
+}
+
+.capability-card small {
+  margin-top: 0.2rem;
+  color: var(--muted);
+}
+
+.capability-card__indicator {
+  width: 0.72rem;
+  height: 0.72rem;
+  border-radius: 999px;
+  background: var(--warning);
+}
+
+.capability-card__indicator[data-status='ready'] {
+  background: var(--success);
+}
+
+.phase-card__header {
+  display: flex;
+  margin-bottom: 1rem;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  justify-content: space-between;
+  text-transform: uppercase;
+}
+
+.phase-card__status[data-status='complete'] {
+  color: var(--success);
+}
+
+.phase-card__status[data-status='next'] {
+  color: var(--primary);
+}
+
+.phase-card p,
+.error-panel p {
+  margin-bottom: 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
+@media (max-width: 1100px) {
+  .capability-grid,
+  .phase-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .capability-grid,
+  .phase-grid {
+    grid-template-columns: 1fr;
+  }
+}

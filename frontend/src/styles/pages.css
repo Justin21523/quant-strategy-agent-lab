@@ -1,0 +1,122 @@
+.page {
+  width: min(100%, 92rem);
+  margin: 0 auto;
+  padding: clamp(1.4rem, 4vw, 4rem);
+}
+
+.hero-panel {
+  display: grid;
+  min-height: min(36rem, calc(100vh - 10rem));
+  padding: clamp(1.5rem, 4vw, 3.5rem);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background:
+    linear-gradient(135deg, rgba(99, 102, 241, 0.13), transparent 42%),
+    rgba(15, 22, 36, 0.8);
+  box-shadow: var(--shadow);
+  grid-template-columns: minmax(0, 1.5fr) minmax(17rem, 0.7fr);
+  align-items: center;
+  gap: clamp(2rem, 5vw, 5rem);
+}
+
+.hero-panel__copy {
+  max-width: 44rem;
+  margin-bottom: 1.75rem;
+  color: var(--muted);
+  font-size: clamp(1rem, 1.8vw, 1.2rem);
+}
+
+.hero-panel__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.system-card {
+  padding: 1.4rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  background: rgba(9, 13, 22, 0.72);
+}
+
+.system-card__label {
+  display: block;
+  margin-bottom: 1.1rem;
+  color: var(--primary);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.system-card strong {
+  display: block;
+  margin-bottom: 0.45rem;
+  font-size: 1.2rem;
+}
+
+.system-card p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.content-section {
+  padding-top: clamp(3rem, 6vw, 6rem);
+}
+
+.section-heading {
+  display: flex;
+  margin-bottom: 1.4rem;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.placeholder-page {
+  display: grid;
+  min-height: calc(100vh - 9rem);
+  place-items: center;
+}
+
+.placeholder-panel {
+  width: min(100%, 48rem);
+  padding: clamp(1.5rem, 5vw, 4rem);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.placeholder-panel h1 {
+  max-width: none;
+  font-size: clamp(2.2rem, 5vw, 4.5rem);
+}
+
+.placeholder-panel > p {
+  color: var(--muted);
+  font-size: 1.05rem;
+}
+
+.placeholder-panel__note {
+  margin: 2rem 0;
+  padding: 1rem;
+  border-left: 3px solid var(--primary);
+  color: var(--muted);
+  background: var(--bg-elevated);
+}
+
+.placeholder-panel__note p {
+  margin: 0.35rem 0 0;
+}
+
+@media (max-width: 800px) {
+  .hero-panel {
+    min-height: auto;
+    grid-template-columns: 1fr;
+  }
+
+  .section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

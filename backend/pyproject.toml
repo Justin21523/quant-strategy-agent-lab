@@ -1,0 +1,42 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "quant-strategy-agent-lab-backend"
+version = "0.1.0"
+description = "FastAPI backend for Quant Strategy Agent Lab"
+requires-python = ">=3.11,<3.15"
+dependencies = [
+  "fastapi==0.138.1",
+  "pydantic-settings==2.14.2",
+  "uvicorn[standard]==0.49.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "httpx2==2.5.0",
+  "pytest==9.1.1",
+  "ruff==0.15.20",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
+
+[tool.pytest.ini_options]
+addopts = "-q"
+pythonpath = ["."]
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+extend-exclude = ["data"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"
