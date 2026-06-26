@@ -313,8 +313,8 @@ class StrategyTemplateService:
                 "template_parameters": parameters,
                 "notes": notes,
                 "execution_assumption": (
-                    "Signals are generated from completed daily bars; Phase 4 will define fill "
-                    "semantics."
+                    "Signals are generated from completed daily bars; Phase 4 fills regular "
+                    "entries and exits at next bar open."
                 ),
                 "disclaimer": (
                     "Educational research output only. Historical backtests do not guarantee "
@@ -362,7 +362,7 @@ class StrategyTemplateService:
                 _issue(
                     "unsupported_timeframe",
                     StrategyIssueSeverity.ERROR,
-                    "Phase 3 templates only support daily bars.",
+                    "Strategy templates currently support daily bars only.",
                     "$.timeframe",
                 )
             )

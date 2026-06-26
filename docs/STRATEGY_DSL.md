@@ -1,8 +1,8 @@
-# Strategy JSON DSL — Phase 3 Contract
+# Strategy JSON DSL Contract
 
 ## Purpose
 
-The Strategy JSON DSL is the safety and reproducibility boundary between a user-facing strategy template and deterministic quantitative code. Phase 3 implements this contract through deterministic templates only. Natural-language parsing and arbitrary code generation remain out of scope.
+The Strategy JSON DSL is the safety and reproducibility boundary between a user-facing strategy template and deterministic quantitative code. Phase 3 renders this contract through deterministic templates, and Phase 4 consumes it through the backtest engine. Natural-language parsing and arbitrary code generation remain out of scope.
 
 ## Safety principles
 
@@ -82,7 +82,7 @@ The Strategy JSON DSL is the safety and reproducibility boundary between a user-
 
 ## Validation invariants
 
-The Phase 3 validation service checks:
+The validation service checks:
 
 - required top-level fields;
 - supported `dsl_version`;
@@ -114,3 +114,7 @@ The backend returns the authoritative Strategy JSON DSL preview and validation r
 ## Natural-language parser rule
 
 A future natural-language parser may propose a DSL document. It may not execute it. The validation service decides whether the document is accepted, rejected, or returned with warnings.
+
+## Phase 4 execution ownership
+
+The Phase 4 backtest engine consumes validated Strategy JSON DSL directly. It generates signals from rule groups, fills regular entries and exits at next bar open, applies commission/slippage assumptions, and returns trades, equity, drawdown, warnings, and metrics. The frontend renders these results but does not calculate them locally.

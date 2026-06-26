@@ -90,6 +90,7 @@ ReDoc: http://127.0.0.1:${BACKEND_PORT}/redoc
 Frontend: http://127.0.0.1:${FRONTEND_PORT}
 Market Data Lab: http://127.0.0.1:${FRONTEND_PORT}/#/market-data
 Strategy Builder: http://127.0.0.1:${FRONTEND_PORT}/#/strategy-builder
+Backtest Lab: http://127.0.0.1:${FRONTEND_PORT}/#/backtest-lab
 EOF
 
 wait -n "${backend_pid}" "${frontend_pid}"

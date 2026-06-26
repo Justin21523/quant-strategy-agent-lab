@@ -21,21 +21,21 @@ export function createDashboardPage() {
             children: [
               createElement("span", {
                 className: "eyebrow",
-                text: "Phase 3 · Strategy templates online",
+                text: "Phase 4 · Backtest engine online",
               }),
               createElement("h1", {
-                text: "Strategy research now has controlled JSON templates.",
+                text: "Strategy research now executes reproducible backtests.",
               }),
               createElement("p", {
-                text: "The workbench now renders five deterministic strategy templates into validated Strategy JSON DSL, ready for Phase 4 signal generation and backtesting.",
+                text: "The workbench now renders safe Strategy JSON DSL, generates signals, executes long-only backtests, and returns trades, equity, drawdown, metrics, and Agent steps.",
               }),
               createElement("div", {
                 className: "hero__actions",
                 children: [
                   createElement("a", {
                     className: "button button--primary",
-                    text: "Open Strategy Builder",
-                    attributes: { href: "#/strategy-builder" },
+                    text: "Run Backtest Lab",
+                    attributes: { href: "#/backtest-lab" },
                   }),
                   createElement("a", {
                     className: "button button--secondary",
@@ -57,8 +57,8 @@ export function createDashboardPage() {
                   createElement("span", { text: "$ make check" }),
                   createElement("span", { text: "✓ Provider adapters" }),
                   createElement("span", { text: "✓ SQLite cache" }),
-                  createElement("span", { text: "✓ Strategy DSL tests" }),
-                  createElement("strong", { text: "Phase 3 ready" }),
+                  createElement("span", { text: "✓ Backtest engine tests" }),
+                  createElement("strong", { text: "Phase 4 ready" }),
                 ],
               }),
             ],
@@ -70,8 +70,8 @@ export function createDashboardPage() {
         children: [
           createMetricCard({
             label: "Current phase",
-            value: "3 / 13",
-            meta: "Strategy Templates",
+            value: "4 / 13",
+            meta: "Backtest Engine",
             tone: "accent",
           }),
           createMetricCard({
@@ -86,8 +86,8 @@ export function createDashboardPage() {
           }),
           createMetricCard({
             label: "Current features",
-            value: "5 templates",
-            meta: "Buy & Hold · MA · RSI · MACD",
+            value: "Backtests",
+            meta: "Trades · Equity · Drawdown",
             tone: "muted",
           }),
         ],
@@ -104,10 +104,10 @@ export function createDashboardPage() {
                   createElement("div", {
                     children: [
                       createElement("span", { className: "eyebrow", text: "Feature pipeline" }),
-                      createElement("h2", { text: "Controlled template-to-DSL renderer" }),
+                      createElement("h2", { text: "Template-to-backtest execution path" }),
                     ],
                   }),
-                  createElement("span", { className: "phase-chip", text: "Phase 03" }),
+                  createElement("span", { className: "phase-chip", text: "Phase 04" }),
                 ],
               }),
               createElement("div", {
@@ -117,8 +117,8 @@ export function createDashboardPage() {
                   architectureRow("Normalize", "SQLite OHLCV · sorted · validated · cached"),
                   architectureRow("Compute", "SMA · EMA · RSI · MACD · Bollinger Bands · ATR"),
                   architectureRow(
-                    "Expose",
-                    "Template catalog · render endpoint · validation issues",
+                    "Execute",
+                    "Signals · next-open fills · trade ledger · equity and drawdown",
                   ),
                 ],
               }),
@@ -134,7 +134,7 @@ export function createDashboardPage() {
                     children: [
                       createElement("span", { className: "eyebrow", text: "Agent-ready workflow" }),
                       createElement("h2", {
-                        text: "Strategy templates become the third Agent tool",
+                        text: "Backtesting becomes the fourth Agent tool",
                       }),
                     ],
                   }),

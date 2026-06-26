@@ -1,118 +1,86 @@
-# Frontend Architecture
+# Frontend Architecture — Phase 4
 
-## Goal
+The frontend remains pure Vanilla JavaScript with ES modules. Vite is used only for development server, proxying, and production bundling.
 
-The frontend intentionally uses HTML, CSS, and Vanilla JavaScript so the project exercises browser fundamentals without collapsing into one global script.
-
-## Module map
-
-| Directory | Responsibility |
-|---|---|
-| `core/` | Router, store, event bus, API client, configuration, DOM helper |
-| `layouts/` | Persistent shell, sidebar, topbar, status bar |
-| `pages/` | Route-level composition and transient page state |
-| `components/` | Reusable DOM units with small update methods |
-| `charts/` | Visualization adapters; chart-specific DOM stays isolated |
-| `services/` | API-facing use cases and endpoint construction |
-| `utils/` | Pure formatting and transformation helpers |
-| `styles/` | Tokens, shell, components, pages, feature styles, responsiveness |
-
-## Market Data page state
-
-The page owns:
-
-- catalog response;
-- selected symbol;
-- start/end inputs;
-- provider and fallback inputs;
-- current OHLCV response;
-- current request status.
-
-The global store owns only shell-level state such as route and API connectivity. This prevents large market series from triggering unrelated application re-renders.
-
-## DOM rules
-
-- Dynamic API values are assigned through `textContent`.
-- User/provider values are not interpolated into `innerHTML`.
-- Components return an element or `{ element, update }` object.
-- Route pages may return `{ element, destroy }` for cleanup.
-- API paths are constructed by services, not pages.
-- Chart-specific SVG creation stays under `charts/`.
-
-## Current Market Data components
+## Module layout
 
 ```text
-MarketDataPage
-├── symbol/date/provider controls
-├── activity banner
-├── metric cards
-├── PricePreviewChart (native SVG)
-├── source metadata list
-├── DataQualityList
-├── provider capability cards
-└── MarketDataTable
+frontend/src/
+├── charts/
+│   ├── backtest-line-chart.js
+│   ├── indicator-preview-chart.js
+│   └── price-preview-chart.js
+├── components/
+│   ├── backtest-trade-table.js
+│   ├── strategy-json-preview.js
+│   └── strategy-validation-list.js
+├── core/
+│   ├── api-client.js
+│   ├── router.js
+│   ├── store.js
+│   └── event-bus.js
+├── pages/
+│   ├── market-data-page.js
+│   ├── strategy-builder-page.js
+│   └── backtest-lab-page.js
+├── services/
+│   ├── backtest-service.js
+│   ├── market-service.js
+│   └── strategy-service.js
+└── styles/
+    ├── backtest-lab.css
+    ├── market-data.css
+    └── strategy-builder.css
 ```
 
-## Why native SVG in Phase 1
+## Page lifecycle
 
-The first preview intentionally avoids a chart framework. It practices:
+Pages may return:
 
-- SVG namespaces;
-- coordinate scaling;
-- path/polyline construction;
-- responsive `viewBox` behavior;
-- accessible chart labeling;
-- keeping drawing code out of page event handlers.
+```javascript
+{
+  element,
+  destroy() {
+    // release listeners, pending requests, chart instances, and timers
+  },
+}
+```
 
-A later financial chart library can replace the adapter without changing the page's API response handling.
+This is important for future Agent streaming and long-running scans.
 
-## Phase 2 update — Indicator preview modules
+## Backtest Lab
 
-The Market Data Lab now composes one more chart adapter:
+The route is:
 
 ```text
-market-data-page.js
-  ├── market-service.js
-  ├── price-preview-chart.js
-  └── indicator-preview-chart.js
+/#/backtest-lab
 ```
 
-`indicator-preview-chart.js` is still plain DOM/SVG code. It renders:
-
-- close price with SMA 20 and SMA 60 overlays;
-- RSI 14 oscillator with 70 and 30 guide lines;
-- legends generated from the indicator keys in the API bundle.
-
-The page requests indicator data only through the service layer:
+It currently supports:
 
 ```text
-marketService.getOhlcv({ includeIndicators: true })
+strategy template selection
+symbol selection
+market/date/capital/commission/slippage controls
+typed template parameters
+rendered Strategy JSON preview
+POST /api/v1/backtests/run
+equity SVG chart
+drawdown SVG chart
+metric cards
+trade table
+warnings
+Agent-style execution steps
 ```
 
-Local development URLs are dynamic. The `API Docs` link is provided through `VITE_API_DOCS_URL` by `scripts/dev.sh`, and the `/api` proxy receives the same backend port through `BACKEND_PORT`.
+Phase 4 Backtest Lab is intentionally minimal. The richer K-line chart, markers, and polished dashboard belong to Phase 5.
 
-## Phase 3 update — Strategy Builder modules
+## API proxy
 
-The Strategy Builder route is now implemented at `/#/strategy-builder`.
+The Vite proxy targets the dynamic backend port selected by `./scripts/dev.sh`. API proxy tests must use the printed frontend port:
 
-```text
-strategy-builder-page.js
-  ├── strategy-service.js
-  ├── market-service.js
-  ├── strategy-json-preview.js
-  └── strategy-validation-list.js
+```bash
+curl 'http://127.0.0.1:<frontend-port>/api/v1/backtests/run'
 ```
 
-State ownership:
-
-- the page owns selected template, typed parameter values, context fields, current validation report, and last rendered JSON;
-- the backend owns template rules and Strategy JSON rendering;
-- the frontend never constructs rule operators or indicator dependencies locally.
-
-The page uses dynamic controls generated from the backend template metadata. Every input/change event schedules a short debounced render call to:
-
-```text
-POST /api/v1/strategies/templates/{template_id}/render
-```
-
-The JSON preview uses `textContent`, not `innerHTML`, and displays the exact backend-rendered object.
+Do not assume `5173`.

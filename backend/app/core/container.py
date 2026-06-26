@@ -8,6 +8,7 @@ from app.providers.csv_provider import CsvMarketDataProvider
 from app.providers.finmind_provider import FinMindMarketDataProvider
 from app.providers.yfinance_provider import YFinanceMarketDataProvider
 from app.repositories.market_data_repository import MarketDataRepository
+from app.services.backtest_service import BacktestService
 from app.services.market_data_normalizer import MarketDataNormalizer
 from app.services.market_data_service import MarketDataService
 from app.services.strategy_template_service import StrategyTemplateService
@@ -17,6 +18,7 @@ from app.services.strategy_template_service import StrategyTemplateService
 class AppContainer:
     market_data_service: MarketDataService
     strategy_template_service: StrategyTemplateService
+    backtest_service: BacktestService
 
     @classmethod
     def build(cls, settings: Settings) -> AppContainer:
@@ -34,15 +36,21 @@ class AppContainer:
             settings.market_database_path,
             BACKEND_DIRECTORY / "app" / "database" / "schema.sql",
         )
+        market_data_service = MarketDataService(
+            repository=repository,
+            providers=providers,
+            normalizer=MarketDataNormalizer(),
+            seed_demo_data=settings.market_seed_demo_data,
+            max_response_bars=settings.market_max_response_bars,
+        )
+        strategy_template_service = StrategyTemplateService()
         return cls(
-            market_data_service=MarketDataService(
-                repository=repository,
-                providers=providers,
-                normalizer=MarketDataNormalizer(),
-                seed_demo_data=settings.market_seed_demo_data,
-                max_response_bars=settings.market_max_response_bars,
+            market_data_service=market_data_service,
+            strategy_template_service=strategy_template_service,
+            backtest_service=BacktestService(
+                market_data_service=market_data_service,
+                strategy_template_service=strategy_template_service,
             ),
-            strategy_template_service=StrategyTemplateService(),
         )
 
     def initialize(self) -> None:

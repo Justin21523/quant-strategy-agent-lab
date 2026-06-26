@@ -15,7 +15,7 @@ help:
 	  '  make lint       Run Python and JavaScript linters' \
 	  '  make format     Format backend and frontend code' \
 	  '  make build      Build the frontend' \
-	  '  make check      Run all Phase 3 quality gates' \
+	  '  make check      Run all Phase 4 quality gates' \
 	  '  make clean      Remove generated files and local cache' \
 	  '  make init-git   Initialize a local Git repository'
 

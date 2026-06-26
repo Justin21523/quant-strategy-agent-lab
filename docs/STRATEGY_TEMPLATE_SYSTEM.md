@@ -1,6 +1,6 @@
-# Strategy Template System — Phase 3
+# Strategy Template System
 
-Phase 3 adds a deterministic strategy-template layer between the Phase 2 indicator engine and the future Phase 4 backtest engine.
+The deterministic strategy-template layer sits between the indicator engine and the Phase 4 backtest engine.
 
 The design rule is strict: **templates render declarative Strategy JSON DSL only. They never generate or execute arbitrary Python code.**
 
@@ -116,9 +116,9 @@ The Vanilla JS Strategy Builder supports:
 - copy-to-clipboard action;
 - research disclaimer.
 
-## Phase 4 handoff
+## Backtest engine handoff
 
-Phase 4 should consume `strategy_json` directly. It should not infer strategy behavior from template names or UI state. The first backtest implementation can focus on these rule primitives:
+Phase 4 consumes `strategy_json` directly. It does not infer strategy behavior from template names or UI state. The MVP backtest engine currently supports these rule primitives:
 
 ```text
 ENTER_ON_FIRST_BAR
@@ -126,5 +126,7 @@ EXIT_ON_LAST_BAR
 CROSSOVER
 CROSSUNDER
 LESS_THAN
+LESS_THAN_OR_EQUAL
 GREATER_THAN
+GREATER_THAN_OR_EQUAL
 ```

@@ -11,7 +11,7 @@ class HealthResponse(BaseModel):
     service: str
     version: str
     environment: str
-    phase: Literal["phase-3"]
+    phase: Literal["phase-4"]
     timestamp: datetime
 
 

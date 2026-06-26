@@ -1,121 +1,152 @@
 # Roadmap
 
-## Status legend
+The project is implemented phase by phase so each layer has a clear contract before the next one depends on it.
 
-- ✅ complete
-- ▶ next
-- ○ planned
+## Completed phases
 
-| Phase | Status | Name | Exit condition |
-|---:|:---:|---|---|
-| 0 | ✅ | Foundation | Frontend/backend run, connect, document, test, lint, and build |
-| 1 | ✅ | Market Data Layer | Validated OHLCV, provider fallback, SQLite cache, APIs, and data-inspection UI |
-| 2 | ✅ | Indicator Engine | Tested SMA, EMA, RSI, MACD, Bollinger Bands, ATR, API bundle, and frontend SMA/RSI preview |
-| 3 | ✅ | Strategy Template + DSL | Templates produce a fully validated Strategy JSON document |
-| 4 | ▶ | Backtest Engine | One strategy produces deterministic trades, equity, and costs |
-| 5 | ○ | Backtest Lab UI | Complete choose-configure-run-inspect workflow |
-| 6 | ○ | Agent Timeline | Observable ordered workflow with success and failure states |
-| 7 | ○ | Performance Analyzer | Documented and tested return/risk/trade metrics |
-| 8 | ○ | Explanation Engine | Rule-based explanations before optional local LLM prose |
-| 9 | ○ | Natural-language Parser | Supported sentences map safely to the DSL |
-| 10 | ○ | Parameter Scanner | Sensitivity heatmap and ranked combinations with warnings |
-| 11 | ○ | Multi-Asset Comparison | Same strategy compared across assets and benchmarks |
-| 12 | ○ | Report Center | Markdown, JSON, and trade CSV exports are reproducible |
-| 13 | ○ | Portfolio Polish | Complete docs, screenshots, tests, deployment, and demo script |
+### Phase 0 — Foundation
 
-## Phase 2 completion record
+- FastAPI application shell;
+- modular Vanilla JavaScript frontend shell;
+- Linux bootstrap/dev/check scripts;
+- README and technical documentation;
+- baseline quality gates.
 
-### Backend
+### Phase 1 — Market Data Layer
 
-- provider-neutral `IndicatorService` built on normalized `MarketBar` rows;
-- domain models for catalog items, indicator series, points, bundles, and warnings;
-- SMA, EMA, RSI, MACD, Bollinger Bands, and ATR;
-- explicit warm-up and null-value behavior;
-- `/api/v1/indicators/catalog` endpoint;
-- `/api/v1/market/ohlcv?include_indicators=true` response bundle;
-- dynamic CORS origin regex for local development ports;
-- optional yfinance dependency behavior remains explicit and recoverable.
+- provider-neutral market data domain;
+- deterministic CSV fixtures for `AAPL`, `SPY`, and `QQQ`;
+- SQLite OHLCV cache;
+- yfinance adapter boundary;
+- reserved FinMind adapter boundary;
+- Market Data Lab.
 
-### Frontend
+### Phase 2 — Indicator Engine
 
-- Market Data Lab upgraded into Market + Indicator Lab;
-- `Include Phase 2 indicator bundle` checkbox;
-- native SVG close + SMA 20 + SMA 60 overlay;
-- native SVG RSI 14 oscillator with 70/30 guide lines;
-- metric cards for indicator count and latest RSI;
-- service contract updated for `include_indicators=true`.
+- SMA;
+- EMA;
+- RSI;
+- MACD;
+- Bollinger Bands;
+- ATR;
+- indicator catalog;
+- OHLCV endpoint indicator output;
+- native SVG indicator previews.
 
-### Developer workflow
+### Phase 3 — Strategy Template System
 
-- `./scripts/dev.sh` selects dynamic backend and frontend ports when not provided;
-- dev output prints FastAPI, Swagger, ReDoc, Frontend, and Market Data Lab URLs;
-- Vite `/api` proxy targets the dynamic backend port from the same dev run.
+- five deterministic MVP templates;
+- Strategy JSON DSL v1.0;
+- template rendering API;
+- Strategy DSL validation;
+- Vanilla JS Strategy Builder.
 
+### Phase 4 — Backtest Engine MVP
 
-## Phase 3 completion record
+- validated Strategy JSON DSL execution;
+- feature frame and indicator computation from DSL requirements;
+- entry/exit signal generation;
+- deterministic long-only execution;
+- next-open fills for normal signals;
+- explicit commission and slippage;
+- forced final-bar liquidation;
+- trade ledger;
+- equity curve;
+- drawdown curve;
+- basic performance metrics;
+- warnings and Agent-style execution steps;
+- minimal Vanilla JS Backtest Lab runner.
 
-### Backend
+## Next phases
 
-- `StrategyTemplateService` renders deterministic templates into Strategy JSON DSL;
-- five MVP templates are available: Buy and Hold, MA Crossover, MA Crossover + RSI Filter, RSI Mean Reversion, and MACD Trend Following;
-- `/api/v1/strategies/templates` lists typed template metadata;
-- `/api/v1/strategies/templates/{template_id}/render` returns the backend-authoritative DSL preview;
-- `/api/v1/strategies/validate` checks DSL structure, indicator ids, rule references, capital assumptions, and risk assumptions;
-- template parameter errors use the same structured domain-error envelope as market-data errors.
+### Phase 5 — Backtest Lab Frontend
 
-### Frontend
+- candlestick chart with buy/sell markers;
+- volume panel;
+- richer metrics layout;
+- better trade filtering and sorting;
+- result persistence UI;
+- dashboard polish.
 
-- Strategy Builder route implemented at `/#/strategy-builder`;
-- template cards, context controls, typed parameter editor, JSON preview, validation list, and metadata panels;
-- all API calls go through `strategy-service.js`;
-- no arbitrary code editor is exposed in Phase 3.
+### Phase 6 — Agent Timeline MVP
 
-### Developer workflow
+- formal Agent step model;
+- expandable execution timeline;
+- failure-state UI;
+- backend step provenance for each run.
 
-- `./scripts/dev.sh` prints the Strategy Builder URL using the selected dynamic frontend port;
-- Vite proxy validation uses the printed frontend port, not a fixed port assumption.
+### Phase 7 — Performance Analyzer
 
-## Phase 3 — Strategy Template + DSL
+- Sortino ratio;
+- Calmar ratio;
+- annualized volatility;
+- average win/loss;
+- return distribution;
+- metric explanations and tooltips.
 
-### Scope
+### Phase 8 — Rule-based / AI Explanation
 
-- define Strategy JSON DSL validation models;
-- implement Buy and Hold, MA Crossover, MA Crossover + RSI Filter, RSI Mean Reversion, and MACD Trend Following templates;
-- map template parameters to indicator specs and rule conditions;
-- add frontend Strategy Builder with JSON preview and validation messages;
-- keep LLM parsing out of scope until the controlled DSL is stable.
+- rule-based risk summary;
+- optional local LLM explanation layer;
+- Markdown strategy report.
 
-### Exit condition
+### Phase 9 — Natural Language Strategy Parser
 
-A user can select a strategy template, modify parameters, see a valid Strategy JSON document, and understand which indicator keys and rule operators will be used by the future backtest engine.
+- natural language to Strategy JSON DSL;
+- strict validation;
+- no arbitrary Python generation.
 
-## Dependency order
+### Phase 10 — Parameter Scanner
+
+- parameter grid execution;
+- heatmap output;
+- strategy ranking table.
+
+### Phase 11 — Multi-Asset Comparison
+
+- batch backtests;
+- multi-symbol ranking;
+- risk/return scatter.
+
+### Phase 12 — Report Center
+
+- Markdown report export;
+- JSON result export;
+- trade CSV export.
+
+### Phase 13 — Portfolio polish
+
+- README refinement;
+- screenshots;
+- diagrams;
+- final docs;
+- demo script.
+
+## Visual roadmap
 
 ```mermaid
 gantt
-    title Quant Strategy Agent Lab milestones
+    title Quant Strategy Agent Lab Roadmap
     dateFormat  YYYY-MM-DD
     axisFormat  %m-%d
 
-    section Foundation and data
-    Phase 0 foundation             :done, p0, 2026-06-25, 1d
-    Phase 1 market data            :done, p1, after p0, 1d
-    Phase 2 indicators             :done, p2, after p1, 1d
-    Phase 3 strategy DSL           :done, p3, after p2, 1d
+    section Foundation
+    Phase 0 foundation            :done, p0, 2026-06-26, 1d
+    Phase 1 market data           :done, p1, after p0, 1d
+    Phase 2 indicators            :done, p2, after p1, 1d
+    Phase 3 strategy DSL          :done, p3, after p2, 1d
+    Phase 4 backtest engine       :done, p4, after p3, 1d
 
-    section Backtesting MVP
-    Phase 4 engine                 :active, p4, after p3, 1d
-    Phase 5 frontend               :p5, after p4, 1d
-    Phase 6 timeline               :p6, after p5, 1d
-    Phase 7 metrics                :p7, after p6, 1d
+    section MVP Backtest UI
+    Phase 5 backtest lab frontend :active, p5, after p4, 1d
+    Phase 6 agent timeline        :p6, after p5, 1d
+    Phase 7 performance analyzer  :p7, after p6, 1d
 
-    section Research automation
-    Phase 8 explanation            :p8, after p7, 1d
-    Phase 9 language parser        :p9, after p8, 1d
-    Phase 10 scanning              :p10, after p9, 1d
-    Phase 11 comparison            :p11, after p10, 1d
-    Phase 12 reports               :p12, after p11, 1d
-    Phase 13 polish                :p13, after p12, 1d
+    section Advanced
+    Phase 8 AI explanation        :p8, after p7, 1d
+    Phase 9 NL strategy parser    :p9, after p8, 1d
+    Phase 10 parameter scanner    :p10, after p9, 1d
+    Phase 11 multi asset compare  :p11, after p10, 1d
+    Phase 12 report center        :p12, after p11, 1d
+    Phase 13 portfolio polish     :p13, after p12, 1d
 ```
-
-Dates express dependency order, not delivery-time promises.

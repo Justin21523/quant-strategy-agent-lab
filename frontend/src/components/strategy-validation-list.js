@@ -12,7 +12,9 @@ export function createStrategyValidationList() {
           dataset: { severity: "info" },
           children: [
             createElement("strong", { text: "valid" }),
-            createElement("p", { text: "Strategy JSON DSL passes Phase 3 structural validation." }),
+            createElement("p", {
+              text: "Strategy JSON DSL passes structural validation and is ready for backtesting.",
+            }),
           ],
         }),
       );

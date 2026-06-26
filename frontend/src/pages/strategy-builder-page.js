@@ -115,7 +115,7 @@ export function createStrategyBuilderPage() {
           }),
           createElement("h1", { text: "Build safe Strategy JSON DSL before backtesting." }),
           createElement("p", {
-            text: "Select a deterministic strategy template, edit typed parameters, and preview the exact JSON contract that Phase 4 will use to generate signals. No arbitrary Python execution. No mystery meat.",
+            text: "Select a deterministic strategy template, edit typed parameters, and preview the exact JSON contract that the Phase 4 engine uses to generate signals. No arbitrary Python execution. No mystery meat.",
           }),
         ],
       }),

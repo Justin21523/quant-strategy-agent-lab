@@ -17,8 +17,8 @@ def system_info(
 ) -> SystemInfoResponse:
     stats = market_service.cache_stats()
     return SystemInfoResponse(
-        phase="3",
-        phase_name="Strategy Template System",
+        phase="4",
+        phase_name="Backtest Engine MVP",
         cache=MarketCacheStatsResponse(
             symbols=stats.symbols,
             bars=stats.bars,
@@ -67,14 +67,24 @@ def system_info(
                 status="ready",
             ),
             Capability(
-                key="strategy_builder_ui",
-                label="Vanilla JS template selector and live JSON preview",
+                key="backtest_engine",
+                label="Deterministic long-only backtest engine",
                 status="ready",
             ),
             Capability(
-                key="backtest_engine",
-                label="Backtest engine",
-                status="planned",
+                key="trade_ledger",
+                label="Closed trade ledger with fees and slippage",
+                status="ready",
+            ),
+            Capability(
+                key="equity_drawdown",
+                label="Equity and drawdown curve output",
+                status="ready",
+            ),
+            Capability(
+                key="backtest_lab_ui",
+                label="Minimal Vanilla JS backtest runner",
+                status="ready",
             ),
         ],
     )

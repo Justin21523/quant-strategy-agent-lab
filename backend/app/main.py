@@ -60,12 +60,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             "name": resolved.project_name,
             "version": __version__,
             "environment": resolved.environment,
-            "phase": "phase-3",
+            "phase": "phase-4",
             "docs": "/docs",
             "health": f"{resolved.api_v1_prefix}/health",
             "market": f"{resolved.api_v1_prefix}/market/symbols",
             "indicators": f"{resolved.api_v1_prefix}/indicators/catalog",
             "strategies": f"{resolved.api_v1_prefix}/strategies/templates",
+            "backtests": f"{resolved.api_v1_prefix}/backtests/run",
             "disclaimer": "Educational and research use only; not investment advice.",
         }
 

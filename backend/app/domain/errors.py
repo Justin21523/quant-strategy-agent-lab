@@ -66,3 +66,8 @@ class StrategyTemplateValidationError(MarketDataError):
 class StrategyDslValidationError(MarketDataError):
     code = "strategy_dsl_validation_error"
     status_code = 422
+
+
+class BacktestExecutionError(MarketDataError):
+    code = "backtest_execution_error"
+    status_code = 500
