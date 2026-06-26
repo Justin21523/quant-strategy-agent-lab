@@ -19,25 +19,28 @@ export function createDashboardPage() {
           createElement("div", {
             className: "hero__content",
             children: [
-              createElement("span", { className: "eyebrow", text: "Phase 1 · Data layer online" }),
+              createElement("span", {
+                className: "eyebrow",
+                text: "Phase 3 · Strategy templates online",
+              }),
               createElement("h1", {
-                text: "Reliable strategy research starts with visible data lineage.",
+                text: "Strategy research now has controlled JSON templates.",
               }),
               createElement("p", {
-                text: "The workbench now provides a provider boundary, normalization pipeline, SQLite OHLCV cache, deterministic offline fixtures, optional yfinance synchronization, typed API contracts, and a raw-data inspection page.",
+                text: "The workbench now renders five deterministic strategy templates into validated Strategy JSON DSL, ready for Phase 4 signal generation and backtesting.",
               }),
               createElement("div", {
                 className: "hero__actions",
                 children: [
                   createElement("a", {
                     className: "button button--primary",
-                    text: "Open Market Data Lab",
-                    attributes: { href: "#/market-data" },
+                    text: "Open Strategy Builder",
+                    attributes: { href: "#/strategy-builder" },
                   }),
                   createElement("a", {
                     className: "button button--secondary",
-                    text: "Inspect Strategy DSL",
-                    attributes: { href: "#/strategy-builder" },
+                    text: "Inspect Market + Indicators",
+                    attributes: { href: "#/market-data" },
                   }),
                 ],
               }),
@@ -54,8 +57,8 @@ export function createDashboardPage() {
                   createElement("span", { text: "$ make check" }),
                   createElement("span", { text: "✓ Provider adapters" }),
                   createElement("span", { text: "✓ SQLite cache" }),
-                  createElement("span", { text: "✓ Market API tests" }),
-                  createElement("strong", { text: "Phase 1 ready" }),
+                  createElement("span", { text: "✓ Strategy DSL tests" }),
+                  createElement("strong", { text: "Phase 3 ready" }),
                 ],
               }),
             ],
@@ -67,8 +70,8 @@ export function createDashboardPage() {
         children: [
           createMetricCard({
             label: "Current phase",
-            value: "1 / 13",
-            meta: "Market Data Layer",
+            value: "3 / 13",
+            meta: "Strategy Templates",
             tone: "accent",
           }),
           createMetricCard({
@@ -82,9 +85,9 @@ export function createDashboardPage() {
             meta: "Normalized daily OHLCV",
           }),
           createMetricCard({
-            label: "Next phase",
-            value: "Indicators",
-            meta: "SMA · EMA · RSI · MACD",
+            label: "Current features",
+            value: "5 templates",
+            meta: "Buy & Hold · MA · RSI · MACD",
             tone: "muted",
           }),
         ],
@@ -100,20 +103,23 @@ export function createDashboardPage() {
                 children: [
                   createElement("div", {
                     children: [
-                      createElement("span", { className: "eyebrow", text: "Data pipeline" }),
-                      createElement("h2", { text: "One schema across providers" }),
+                      createElement("span", { className: "eyebrow", text: "Feature pipeline" }),
+                      createElement("h2", { text: "Controlled template-to-DSL renderer" }),
                     ],
                   }),
-                  createElement("span", { className: "phase-chip", text: "Phase 01" }),
+                  createElement("span", { className: "phase-chip", text: "Phase 03" }),
                 ],
               }),
               createElement("div", {
                 className: "architecture-stack",
                 children: [
                   architectureRow("Provider", "CSV · yfinance · FinMind boundary"),
-                  architectureRow("Normalize", "types · ordering · duplicates · OHLC rules"),
-                  architectureRow("Persist", "SQLite cache · source metadata · sync audit"),
-                  architectureRow("Expose", "symbols · OHLCV · sync · typed warnings"),
+                  architectureRow("Normalize", "SQLite OHLCV · sorted · validated · cached"),
+                  architectureRow("Compute", "SMA · EMA · RSI · MACD · Bollinger Bands · ATR"),
+                  architectureRow(
+                    "Expose",
+                    "Template catalog · render endpoint · validation issues",
+                  ),
                 ],
               }),
             ],
@@ -126,8 +132,10 @@ export function createDashboardPage() {
                 children: [
                   createElement("div", {
                     children: [
-                      createElement("span", { className: "eyebrow", text: "Future workflow" }),
-                      createElement("h2", { text: "Data remains the first Agent tool" }),
+                      createElement("span", { className: "eyebrow", text: "Agent-ready workflow" }),
+                      createElement("h2", {
+                        text: "Strategy templates become the third Agent tool",
+                      }),
                     ],
                   }),
                 ],
@@ -135,7 +143,10 @@ export function createDashboardPage() {
               createAgentTimeline([
                 ["Market data loaded", "Provider, range, adjustment, and fixture status"],
                 ["Indicators built", "Phase 2 computes tested technical features"],
-                ["Strategy validated", "Controlled JSON DSL instead of arbitrary code"],
+                [
+                  "Strategy rendered",
+                  "Phase 3 produces controlled JSON DSL instead of arbitrary code",
+                ],
                 ["Backtest executed", "Explicit fees, slippage, and timing assumptions"],
                 ["Risk explained", "Evidence-based report with source lineage"],
               ]),

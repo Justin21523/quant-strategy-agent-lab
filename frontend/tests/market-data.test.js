@@ -34,7 +34,9 @@ test("market service builds read and synchronization contracts", async () => {
     symbol: "SPY",
     start: "2025-01-01",
     end: "2025-12-31",
+    includeIndicators: true,
   });
+  await service.getIndicatorCatalog();
   await service.sync({
     symbols: ["SPY"],
     provider: "auto",
@@ -45,16 +47,17 @@ test("market service builds read and synchronization contracts", async () => {
 
   assert.deepEqual(calls[0], [
     "GET",
-    "/api/v1/market/ohlcv?symbol=SPY&start=2025-01-01&end=2025-12-31&interval=1d",
+    "/api/v1/market/ohlcv?symbol=SPY&start=2025-01-01&end=2025-12-31&interval=1d&include_indicators=true",
   ]);
-  assert.deepEqual(calls[1][2], {
+  assert.deepEqual(calls[1], ["GET", "/api/v1/indicators/catalog"]);
+  assert.deepEqual(calls[2][2], {
     symbols: ["SPY"],
     provider: "auto",
     start: "2025-01-01",
     end: "2025-12-31",
     allow_fallback: true,
   });
-  assert.equal(calls[1][3].timeoutMs, 20_000);
+  assert.equal(calls[2][3].timeoutMs, 20_000);
 });
 
 test("market formatters provide stable display fallbacks", () => {

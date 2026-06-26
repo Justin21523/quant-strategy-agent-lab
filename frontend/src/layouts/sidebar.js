@@ -2,7 +2,7 @@ import { createElement } from "../core/dom.js";
 
 const navigation = [
   ["/", "Overview", "00"],
-  ["/market-data", "Market Data", "01"],
+  ["/market-data", "Market + Indicators", "02"],
   ["/strategy-builder", "Strategy Builder", "03"],
   ["/backtest-lab", "Backtest Lab", "04"],
   ["/performance-report", "Performance", "07"],

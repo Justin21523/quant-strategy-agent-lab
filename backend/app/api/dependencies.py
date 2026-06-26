@@ -5,6 +5,7 @@ from fastapi import Depends, Request
 from app.core.config import Settings
 from app.core.container import AppContainer
 from app.services.market_data_service import MarketDataService
+from app.services.strategy_template_service import StrategyTemplateService
 
 
 def get_container(request: Request) -> AppContainer:
@@ -15,6 +16,12 @@ def get_market_data_service(
     container: Annotated[AppContainer, Depends(get_container)],
 ) -> MarketDataService:
     return container.market_data_service
+
+
+def get_strategy_template_service(
+    container: Annotated[AppContainer, Depends(get_container)],
+) -> StrategyTemplateService:
+    return container.strategy_template_service
 
 
 def get_app_settings(request: Request) -> Settings:

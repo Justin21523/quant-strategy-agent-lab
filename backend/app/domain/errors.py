@@ -51,3 +51,18 @@ class ProviderNotImplementedError(MarketDataError):
 class ProviderDataError(MarketDataError):
     code = "provider_data_error"
     status_code = 502
+
+
+class StrategyTemplateNotFoundError(MarketDataError):
+    code = "strategy_template_not_found"
+    status_code = 404
+
+
+class StrategyTemplateValidationError(MarketDataError):
+    code = "strategy_template_validation_error"
+    status_code = 422
+
+
+class StrategyDslValidationError(MarketDataError):
+    code = "strategy_dsl_validation_error"
+    status_code = 422

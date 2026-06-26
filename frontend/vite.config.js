@@ -1,10 +1,11 @@
 import { defineConfig } from "vite";
 
 const backendPort = process.env.BACKEND_PORT ?? "8000";
+const frontendPort = Number(process.env.FRONTEND_PORT ?? "5173");
 
 export default defineConfig({
   server: {
-    port: 5173,
+    port: frontendPort,
     strictPort: true,
     proxy: {
       "/api": {

@@ -10,11 +10,13 @@ from app.providers.yfinance_provider import YFinanceMarketDataProvider
 from app.repositories.market_data_repository import MarketDataRepository
 from app.services.market_data_normalizer import MarketDataNormalizer
 from app.services.market_data_service import MarketDataService
+from app.services.strategy_template_service import StrategyTemplateService
 
 
 @dataclass(slots=True)
 class AppContainer:
     market_data_service: MarketDataService
+    strategy_template_service: StrategyTemplateService
 
     @classmethod
     def build(cls, settings: Settings) -> AppContainer:
@@ -39,7 +41,8 @@ class AppContainer:
                 normalizer=MarketDataNormalizer(),
                 seed_demo_data=settings.market_seed_demo_data,
                 max_response_bars=settings.market_max_response_bars,
-            )
+            ),
+            strategy_template_service=StrategyTemplateService(),
         )
 
     def initialize(self) -> None:

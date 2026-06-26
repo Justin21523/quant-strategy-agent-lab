@@ -1,22 +1,30 @@
-# Architecture — Phase 1
+# Architecture — Phase 3
+
+Phase 3 keeps the system intentionally layered: market data is normalized first, indicators are computed from normalized bars, and strategy templates render declarative Strategy JSON DSL documents for the future backtest engine.
 
 ## 1. Runtime topology
 
+Development servers use dynamic ports selected by `./scripts/dev.sh` / `make dev`. Use the printed URLs instead of assuming fixed ports.
+
 ```mermaid
 flowchart LR
-    Browser[Browser] -->|ES modules| Vite[Vite :5173]
-    Browser -->|/api/v1 via proxy| FastAPI[FastAPI :8000]
-    FastAPI --> Service[MarketDataService]
-    Service --> Normalizer[MarketDataNormalizer]
-    Service --> CSV[CsvMarketDataProvider]
-    Service --> YF[YFinanceMarketDataProvider]
-    Service --> FM[FinMindMarketDataProvider reserved]
+    Browser[Browser] -->|ES modules| Vite[Vite dev server<br/>dynamic frontend port]
+    Browser -->|/api via Vite proxy| FastAPI[FastAPI<br/>dynamic backend port]
+    FastAPI --> Market[MarketDataService]
+    FastAPI --> Indicators[IndicatorService]
+    FastAPI --> Strategies[StrategyTemplateService]
+    Market --> Normalizer[MarketDataNormalizer]
+    Market --> CSV[CsvMarketDataProvider]
+    Market --> YF[YFinanceMarketDataProvider]
+    Market --> FM[FinMindMarketDataProvider reserved]
     Normalizer --> Repo[MarketDataRepository]
-    Repo --> SQLite[(SQLite)]
+    Repo --> SQLite[(SQLite cache)]
+    Market --> Indicators
+    Strategies --> DSL[Strategy JSON DSL]
     FastAPI --> OpenAPI[Swagger / ReDoc]
 ```
 
-In production containers, Nginx serves the frontend and proxies `/api` to the backend service.
+In production containers, Nginx serves the built frontend and proxies `/api`, `/docs`, and `/redoc` to the backend service.
 
 ## 2. Backend dependency direction
 
@@ -24,20 +32,25 @@ In production containers, Nginx serves the frontend and proxies `/api` to the ba
 main / lifespan
   → API routes and dependencies
     → Pydantic schemas
-    → application service
-      → provider protocol + provider adapters
-      → normalizer
-      → repository
-        → SQLite
+    → application services
+      ├── market data service
+      │   ├── provider adapters
+      │   ├── normalizer
+      │   └── repository → SQLite
+      ├── indicator service
+      │   └── provider-neutral MarketBar values
+      └── strategy template service
+          └── deterministic Strategy JSON DSL renderer
 ```
 
 Rules:
 
-- API routes may translate HTTP parameters and domain objects, but do not fetch or normalize data themselves.
-- Provider adapters may understand provider payloads, but do not write to SQLite.
-- Only the normalizer creates persistent `MarketBar` values.
-- The service owns fallback order, use-case validation, audit outcomes, and response-level warnings.
-- The repository owns SQL and row mapping; it does not call external providers.
+- API routes translate HTTP input/output only; business rules live in services.
+- Provider adapters may understand provider payloads, but they do not write to SQLite.
+- Only the normalizer creates persistent `MarketBar` rows.
+- `IndicatorService` consumes normalized `MarketBar` values only.
+- `StrategyTemplateService` does not fetch market data, compute indicators, or execute trades.
+- Strategy templates output declarative JSON only; no Python, JavaScript, shell, SQL, or file paths are accepted.
 
 ## 3. Market-data domain
 
@@ -91,45 +104,49 @@ classDiagram
 
 `SourceBar` is deliberately permissive because external data may be missing or malformed. `MarketBar` is strict and can only exist after validation.
 
-## 4. Provider abstraction
+## 4. Indicator layer
 
-All adapters implement the same conceptual contract:
-
-```python
-class MarketDataProvider(Protocol):
-    name: ProviderName
-
-    def list_symbols(self) -> tuple[MarketSymbol, ...]: ...
-
-    def fetch_ohlcv(
-        self,
-        symbol: MarketSymbol,
-        start: date | None = None,
-        end: date | None = None,
-    ) -> ProviderFetchResult: ...
+```mermaid
+flowchart LR
+    Cache[(SQLite OHLCV cache)] --> MarketService[MarketDataService]
+    MarketService --> Bars[MarketBar objects]
+    Bars --> IndicatorService[IndicatorService]
+    IndicatorService --> Bundle[IndicatorBundle]
+    Bundle --> API[OHLCV response with indicators]
+    API --> Frontend[Vanilla JS Market + Indicator Lab]
 ```
 
-Phase 1 adapters:
+Rules:
 
-| Adapter | State | Role |
+- indicator points are aligned with the same bars returned by the OHLCV request;
+- warm-up values are serialized as `null` instead of fabricated;
+- indicator requests are optional so raw market inspection stays lightweight;
+- provider-specific DataFrames never leak into the indicator engine.
+
+## 5. Strategy template layer
+
+```mermaid
+flowchart LR
+    UI[Vanilla JS Strategy Builder] --> ServiceJS[strategy-service.js]
+    ServiceJS --> API[FastAPI /api/v1/strategies]
+    API --> TemplateService[StrategyTemplateService]
+    TemplateService --> Params[Typed parameter normalization]
+    TemplateService --> Rules[Template rule renderer]
+    TemplateService --> Validator[DSL validator]
+    Validator --> DSL[Validated Strategy JSON DSL]
+```
+
+Implemented templates:
+
+| Template ID | Category | Role |
 |---|---|---|
-| CSV | implemented | deterministic offline fixture and fallback |
-| yfinance | implemented | optional daily public-history synchronization |
-| FinMind | reserved | preserves a clean future Taiwan-market boundary |
+| `buy_and_hold` | baseline | passive benchmark contract |
+| `ma_crossover` | trend following | SMA cross entry/exit |
+| `ma_crossover_rsi` | trend following | SMA cross plus RSI filter |
+| `rsi_mean_reversion` | mean reversion | oversold/recovery RSI rules |
+| `macd_trend_following` | trend following | MACD signal crossover rules |
 
-## 5. Normalization invariants
-
-A row is persisted only when:
-
-- date is within the requested range;
-- open, high, low, close, and adjusted close are finite and positive;
-- `high >= max(open, low, close)`;
-- `low <= min(open, high, close)`;
-- volume is finite and non-negative;
-- duplicate dates have been reduced to one row;
-- rows are sorted in ascending trading-date order.
-
-Invalid and duplicate counts become typed `DataQualityWarning` values. If no valid rows remain, normalization fails instead of returning a deceptive empty success.
+The strategy layer is the controlled boundary for Phase 4. A backtest runner will consume the DSL; it will not parse random prose or execute arbitrary generated code.
 
 ## 6. SQLite model
 
@@ -187,44 +204,9 @@ erDiagram
     }
 ```
 
-The bar primary key is `(symbol, interval, trade_date)`. External synchronization uses upsert semantics, so a newer provider row replaces the prior row for that date. Startup fixture import uses insert-if-missing semantics, so restarting the application does not overwrite synchronized rows with synthetic data.
+The bar primary key is `(symbol, interval, trade_date)`. External synchronization uses upsert semantics. Startup fixture import uses insert-if-missing semantics, so restarting the application does not overwrite synchronized rows with synthetic data.
 
-## 7. Read and synchronization flows
-
-### Cached read
-
-```mermaid
-sequenceDiagram
-    Browser->>FastAPI: GET /market/ohlcv
-    FastAPI->>Service: get_series(symbol, range)
-    Service->>Repository: get_symbol + get_symbol_summary + get_bars
-    Repository-->>Service: full-cache metadata + ordered MarketBar values
-    Service->>Service: compute provenance and warnings
-    Service-->>FastAPI: MarketSeries
-    FastAPI-->>Browser: typed OHLCVResponse
-```
-
-### Provider synchronization
-
-```mermaid
-sequenceDiagram
-    Browser->>FastAPI: POST /market/sync
-    FastAPI->>Service: sync(symbols, provider, range)
-    Service->>Provider: fetch_ohlcv
-    alt provider succeeds
-      Provider-->>Service: ProviderFetchResult
-    else provider fails and fallback allowed
-      Service->>CSV: fetch_ohlcv
-      CSV-->>Service: fixture ProviderFetchResult
-    end
-    Service->>Normalizer: normalize
-    Normalizer-->>Service: strict MarketBar values + warnings
-    Service->>Repository: upsert bars + record audit
-    Repository-->>Service: stored count
-    Service-->>Browser: attempts, provider used, fallback, warnings
-```
-
-## 8. Frontend dependency direction
+## 7. Frontend dependency direction
 
 ```text
 main → app → router/layout/store
@@ -233,20 +215,25 @@ main → app → router/layout/store
         ↙         ↘
  components      services
      ↓              ↓
- chart adapter   API client
+ chart/preview    API client
 ```
 
-The Market Data page owns transient controls and loaded series. The global store remains limited to application-shell state such as route and backend availability. The chart is an adapter with `element` and `update()` rather than inline SVG logic scattered through the page.
+The global store stays small: route and backend availability. Market series, indicator previews, selected strategy template, typed parameters, validation reports, and rendered JSON are route-local state.
 
-## 9. Failure behavior
+## 8. Failure behavior
 
-- Network provider failure does not corrupt the existing cache.
-- Fallback occurs only when the request enables it, and is explicit in the sync response and audit table.
-- A failed symbol does not abort the remaining symbols in a batch.
-- Unsupported symbols and invalid ranges produce typed errors.
-- Cached read endpoints never silently call the network.
-- Fixture data is always labeled in both storage and API output.
+- network provider failure does not corrupt the existing cache;
+- fallback occurs only when the request enables it;
+- unsupported symbols and invalid ranges produce typed domain errors;
+- fixture data is always labeled in storage and API output;
+- invalid template parameters return structured validation errors;
+- DSL validation reports path-specific issues;
+- cached read endpoints never silently call the network;
+- the Strategy Builder never fabricates a strategy locally when backend rendering fails.
 
-## 10. Phase boundaries
+## 9. Phase boundaries
 
-Phase 1 provides validated daily OHLCV only. Phase 2 consumes `MarketBar` values to calculate indicators. Provider-specific DataFrames must not leak into the indicator engine.
+- Phase 1: validated daily OHLCV and provider lineage.
+- Phase 2: tested technical indicators from normalized bars.
+- Phase 3: deterministic templates render validated Strategy JSON DSL.
+- Phase 4: signal generation and backtest execution from the DSL.

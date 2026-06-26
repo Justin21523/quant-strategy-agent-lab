@@ -6,6 +6,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from app.domain.market import ProviderSelection, SyncStatus, WarningSeverity
+from app.schemas.indicators import IndicatorBundleResponse
 
 
 class DateRangeResponse(BaseModel):
@@ -107,6 +108,7 @@ class OHLCVResponse(BaseModel):
     count: int = Field(ge=1)
     warnings: list[DataQualityWarningResponse]
     bars: list[OHLCVBarResponse]
+    indicators: IndicatorBundleResponse | None = None
 
 
 class SyncRequest(BaseModel):

@@ -1,73 +1,116 @@
-# Strategy JSON DSL — Provisional Contract
+# Strategy JSON DSL — Phase 3 Contract
 
 ## Purpose
 
-The Strategy JSON DSL is the safety and reproducibility boundary between a human or LLM description and deterministic quantitative code. Phase 3 will finalize and implement this contract.
+The Strategy JSON DSL is the safety and reproducibility boundary between a user-facing strategy template and deterministic quantitative code. Phase 3 implements this contract through deterministic templates only. Natural-language parsing and arbitrary code generation remain out of scope.
 
-## Principles
+## Safety principles
 
 - declarative rules only;
-- allow-listed indicators, operators, sources, and risk controls;
+- allow-listed template parameters, indicators, operators, sources, and risk controls;
 - no Python, JavaScript, SQL, shell commands, imports, or file paths;
 - every indicator has a stable identifier;
-- rules reference identifiers rather than embedded executable expressions;
-- versioned schema and recorded parameters for every run.
+- rules reference identifiers rather than executable expressions;
+- versioned schema and recorded template parameters for every render;
+- backend validation is authoritative.
 
-## Draft document shape
+## Implemented templates
+
+| Template ID | Category | Indicators | Entry idea |
+|---|---|---|---|
+| `buy_and_hold` | baseline | none | enter on first bar |
+| `ma_crossover` | trend following | SMA | fast SMA crosses above slow SMA |
+| `ma_crossover_rsi` | trend following | SMA, RSI | crossover plus RSI ceiling |
+| `rsi_mean_reversion` | mean reversion | RSI | RSI below oversold threshold |
+| `macd_trend_following` | trend following | MACD | MACD line crosses above signal |
+
+## Example document
 
 ```json
 {
   "dsl_version": "1.0",
-  "strategy_name": "MA Crossover with RSI Filter",
+  "strategy_id": "ma_crossover_rsi",
+  "strategy_name": "SMA 20/60 Crossover + RSI Filter",
+  "template_id": "ma_crossover_rsi",
   "market": "US",
   "symbol": "AAPL",
   "timeframe": "1d",
   "date_range": {
-    "start": "2020-01-01",
+    "start": "2023-01-03",
     "end": "2025-12-31"
   },
   "capital": {
     "initial_cash": 100000,
-    "commission_rate": 0.001,
-    "slippage_rate": 0.0005
+    "commission": 0.001,
+    "slippage": 0.0005
   },
   "indicators": [
-    { "id": "fast", "type": "SMA", "source": "close", "window": 20 },
-    { "id": "slow", "type": "SMA", "source": "close", "window": 60 },
+    { "id": "sma_fast", "type": "SMA", "source": "close", "window": 20 },
+    { "id": "sma_slow", "type": "SMA", "source": "close", "window": 60 },
     { "id": "rsi", "type": "RSI", "source": "close", "window": 14 }
   ],
-  "entry": {
+  "entry_rules": {
     "operator": "AND",
     "conditions": [
-      { "type": "CROSSOVER", "left": "fast", "right": "slow" },
+      { "type": "CROSSOVER", "left": "sma_fast", "right": "sma_slow" },
       { "type": "LESS_THAN", "left": "rsi", "right": 70 }
     ]
   },
-  "exit": {
+  "exit_rules": {
     "operator": "OR",
     "conditions": [
-      { "type": "CROSSUNDER", "left": "fast", "right": "slow" }
+      { "type": "CROSSUNDER", "left": "sma_fast", "right": "sma_slow" },
+      { "type": "GREATER_THAN", "left": "rsi", "right": 80 }
     ]
   },
-  "risk": {
+  "risk_rules": {
     "stop_loss_pct": 0.08,
     "take_profit_pct": 0.2,
     "max_position_pct": 1.0
+  },
+  "metadata": {
+    "source": "strategy_template_system",
+    "template_parameters": {
+      "fast_window": 20,
+      "slow_window": 60,
+      "rsi_window": 14
+    },
+    "disclaimer": "Educational research output only. Historical backtests do not guarantee future performance."
   }
 }
 ```
 
-## Draft validation invariants
+## Validation invariants
 
-- start date must precede end date;
-- indicator IDs are unique;
-- every referenced indicator exists;
-- windows are positive integers and compatible with available observations;
-- fast MA must be less than slow MA for the MA crossover template;
-- percentages use decimal form and remain inside documented bounds;
-- unsupported fields fail validation instead of being silently ignored;
-- entry and exit structures cannot be empty unless the selected template explicitly permits it.
+The Phase 3 validation service checks:
+
+- required top-level fields;
+- supported `dsl_version`;
+- daily timeframe only (`1d`);
+- indicator IDs exist and are unique;
+- entry and exit rule groups are non-empty;
+- rule operators are `AND` or `OR`;
+- rule references point to a known indicator, indicator output, OHLCV field, or number;
+- `initial_cash`, `commission`, and `slippage` are non-negative;
+- `max_position_pct` is greater than 0 and at most 1.
+
+Template rendering also validates parameter constraints:
+
+- unknown template parameters are rejected;
+- numeric parameters must be numeric and inside bounds;
+- `fast_window < slow_window` for MA and MACD templates;
+- RSI entry thresholds must be ordered correctly.
+
+## API ownership
+
+The Strategy Builder frontend does not construct rule logic locally. It sends the selected template, market context, and typed parameters to:
+
+```text
+POST /api/v1/strategies/templates/{template_id}/render
+```
+
+The backend returns the authoritative Strategy JSON DSL preview and validation report.
 
 ## Natural-language parser rule
 
-The parser may propose a DSL document. It may not execute it. The validation service decides whether the document is accepted, rejected, or returned with questions/warnings.
+A future natural-language parser may propose a DSL document. It may not execute it. The validation service decides whether the document is accepted, rejected, or returned with warnings.

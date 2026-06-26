@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.0 — Phase 3 Strategy Template System
+
+- Added deterministic Strategy Template System and Strategy JSON DSL rendering.
+- Added five MVP templates: Buy and Hold, MA Crossover, MA Crossover + RSI Filter, RSI Mean Reversion, and MACD Trend Following.
+- Added `/api/v1/strategies/templates`, `/api/v1/strategies/templates/{template_id}/render`, and `/api/v1/strategies/validate`.
+- Added Vanilla JavaScript Strategy Builder with template selector, typed parameter editor, JSON preview, validation panel, and template metadata.
+- Updated `scripts/dev.sh` to print the dynamic Strategy Builder URL.
+- Advanced project version to `0.4.0` and status to Phase 3.
+
 ## [0.2.0] - 2026-06-25
 
 ### Added
@@ -31,3 +40,12 @@
 - Linux bootstrap, development, verification, and Git initialization scripts.
 - Product, architecture, API, Strategy DSL, development, ADR, and roadmap documents.
 - Ruff, pytest/coverage, ESLint, Prettier, and Vite production build quality gates.
+
+## 0.3.0 — Phase 2 Indicator Engine
+
+- Added provider-neutral indicator domain models and `IndicatorService`.
+- Implemented SMA, EMA, RSI, MACD, Bollinger Bands, and ATR.
+- Added `/api/v1/indicators/catalog`.
+- Added `include_indicators=true` support to `/api/v1/market/ohlcv`.
+- Added Vanilla SVG SMA/RSI indicator previews in the Market Data Lab.
+- Updated `scripts/dev.sh` to select dynamic ports and print FastAPI, Swagger, ReDoc, Frontend, and Market Data Lab URLs.

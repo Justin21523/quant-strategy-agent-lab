@@ -22,7 +22,8 @@ class MarketCacheStatsResponse(BaseModel):
 class SystemInfoResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    phase: Literal["1"]
-    phase_name: Literal["Market Data Layer"]
+    phase: Literal["3"]
+    phase_name: Literal["Strategy Template System"]
     cache: MarketCacheStatsResponse
+    strategy_templates: int = Field(ge=0)
     capabilities: list[Capability]

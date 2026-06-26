@@ -7,7 +7,11 @@ from datetime import date, timedelta
 from typing import Any
 
 import pandas as pd
-import yfinance as yf
+
+try:
+    import yfinance as yf
+except ModuleNotFoundError:  # pragma: no cover - exercised in minimal local environments
+    yf = None
 
 from app.domain.errors import ProviderDataError, ProviderUnavailableError
 from app.domain.market import MarketSymbol, ProviderFetchResult, ProviderName, SourceBar
@@ -27,7 +31,7 @@ class YFinanceMarketDataProvider:
     ) -> None:
         self.enabled = enabled
         self.timeout_seconds = timeout_seconds
-        self._download = download_function or yf.download
+        self._download = download_function or (yf.download if yf is not None else None)
 
     def list_symbols(self) -> tuple[MarketSymbol, ...]:
         return ()
@@ -40,6 +44,10 @@ class YFinanceMarketDataProvider:
     ) -> ProviderFetchResult:
         if not self.enabled:
             raise ProviderUnavailableError("The yfinance provider is disabled by configuration.")
+        if self._download is None:
+            raise ProviderUnavailableError(
+                "The yfinance package is not installed in this environment."
+            )
         if not start or not end:
             raise ProviderDataError(
                 "yfinance synchronization requires explicit start and end dates."

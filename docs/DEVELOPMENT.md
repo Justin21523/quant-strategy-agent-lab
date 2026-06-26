@@ -20,13 +20,21 @@ The script verifies Python and Node versions, creates `.venv`, installs `backend
 make dev
 ```
 
-Endpoints:
+Development ports are dynamic. Use the URLs printed by the command, for example:
 
 ```text
-Frontend     http://127.0.0.1:5173
-FastAPI      http://127.0.0.1:8000
-Swagger      http://127.0.0.1:8000/docs
-Market Lab   http://127.0.0.1:5173/#/market-data
+FastAPI: http://127.0.0.1:<backend-port>
+Swagger: http://127.0.0.1:<backend-port>/docs
+ReDoc: http://127.0.0.1:<backend-port>/redoc
+Frontend: http://127.0.0.1:<frontend-port>
+Market Data Lab: http://127.0.0.1:<frontend-port>/#/market-data
+Strategy Builder: http://127.0.0.1:<frontend-port>/#/strategy-builder
+```
+
+When testing the Vite proxy, use the printed frontend port:
+
+```bash
+curl 'http://127.0.0.1:<frontend-port>/api/v1/strategies/templates'
 ```
 
 `Ctrl+C` terminates the Uvicorn and npm/Vite process groups, including reload children.
@@ -37,6 +45,8 @@ Market Lab   http://127.0.0.1:5173/#/market-data
 make backend
 make frontend
 ```
+
+These convenience targets may use their own defaults. For Phase acceptance and proxy testing, prefer `make dev` and the printed URLs.
 
 ## Configuration
 
@@ -80,6 +90,42 @@ ORDER BY created_at DESC;
 
 The cache directory is gitignored. Removing the database is safe during development; the next backend startup recreates the schema and imports missing fixture rows.
 
+## API examples
+
+Use the printed backend URL from `./scripts/dev.sh`:
+
+```bash
+curl 'http://127.0.0.1:<backend-port>/api/v1/market/symbols'
+
+curl 'http://127.0.0.1:<backend-port>/api/v1/market/ohlcv?symbol=SPY&start=2023-01-03&end=2023-02-01&include_indicators=true'
+
+curl -X POST 'http://127.0.0.1:<backend-port>/api/v1/market/sync' \
+  -H 'Content-Type: application/json' \
+  -d '{"symbols":["QQQ"],"provider":"auto","start":"2023-01-03","end":"2023-01-31","allow_fallback":true}'
+
+curl 'http://127.0.0.1:<backend-port>/api/v1/strategies/templates'
+
+curl -X POST 'http://127.0.0.1:<backend-port>/api/v1/strategies/templates/ma_crossover_rsi/render' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "symbol":"AAPL",
+    "market":"US",
+    "start":"2023-01-03",
+    "end":"2025-12-31",
+    "parameters":{
+      "fast_window":20,
+      "slow_window":60,
+      "rsi_window":14,
+      "rsi_entry_max":70,
+      "rsi_exit_min":80,
+      "source":"close",
+      "stop_loss_pct":0.08,
+      "take_profit_pct":0.2,
+      "max_position_pct":1.0
+    }
+  }'
+```
+
 ## Fixture regeneration
 
 ```bash
@@ -87,18 +133,6 @@ The cache directory is gitignored. Removing the database is safe during developm
 ```
 
 After regeneration, run all tests. The fixtures are synthetic and must stay labeled as such in `symbols.csv`, API responses, documentation, and UI.
-
-## API examples
-
-```bash
-curl http://127.0.0.1:8000/api/v1/market/symbols
-
-curl 'http://127.0.0.1:8000/api/v1/market/ohlcv?symbol=SPY&start=2023-01-03&end=2023-02-01'
-
-curl -X POST http://127.0.0.1:8000/api/v1/market/sync \
-  -H 'Content-Type: application/json' \
-  -d '{"symbols":["QQQ"],"provider":"auto","start":"2023-01-03","end":"2023-01-31","allow_fallback":true}'
-```
 
 ## Quality gate
 
@@ -127,6 +161,7 @@ npm --prefix frontend run build
 - use domain errors instead of transport-specific exceptions in services;
 - never persist unnormalized provider rows;
 - keep SQL inside repositories;
+- keep template rendering deterministic and declarative;
 - test fallback and failure behavior, not only happy paths.
 
 ### JavaScript
@@ -152,21 +187,17 @@ npm --prefix frontend run build
 docker compose up --build
 ```
 
-Inspect:
-
-```text
-Frontend  http://localhost:8080
-Backend   http://localhost:8000
-Swagger   http://localhost:8000/docs
-```
+Inspect the service URLs printed by Docker/Compose logs or port mappings. The provided compose file maps the frontend to `8080` and proxies API paths to the backend container.
 
 ## Troubleshooting
 
 ### API appears offline
 
+Use the exact health URL printed by `./scripts/dev.sh`:
+
 ```bash
-curl -v http://127.0.0.1:8000/api/v1/health
-ss -ltnp | grep -E ':8000|:5173'
+curl -v 'http://127.0.0.1:<backend-port>/api/v1/health'
+ss -ltnp | grep -E '<backend-port>|<frontend-port>'
 ```
 
 ### External synchronization fails

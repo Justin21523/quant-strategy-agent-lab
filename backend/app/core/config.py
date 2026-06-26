@@ -16,9 +16,8 @@ class Settings(BaseSettings):
     environment: str = "development"
     api_v1_prefix: str = "/api/v1"
     log_level: str = "INFO"
-    backend_cors_origins: list[str] = Field(
-        default_factory=lambda: ["http://localhost:5173", "http://127.0.0.1:5173"]
-    )
+    backend_cors_origins: list[str] = Field(default_factory=list)
+    backend_cors_origin_regex: str | None = r"https?://(localhost|127\.0\.0\.1):\d+"
 
     market_database_path: Path = BACKEND_DIRECTORY / "data" / "cache" / "market_data.sqlite3"
     market_csv_seed_dir: Path = BACKEND_DIRECTORY / "data" / "seed"

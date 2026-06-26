@@ -22,9 +22,18 @@ export function createMarketService(client = apiClient) {
       const query = buildQuery(filters);
       return client.get(`${basePath}/symbols${query ? `?${query}` : ""}`);
     },
-    getOhlcv({ symbol, start, end, interval = "1d" }) {
-      const query = buildQuery({ symbol, start, end, interval });
+    getOhlcv({ symbol, start, end, interval = "1d", includeIndicators = false }) {
+      const query = buildQuery({
+        symbol,
+        start,
+        end,
+        interval,
+        include_indicators: includeIndicators ? true : undefined,
+      });
       return client.get(`${basePath}/ohlcv?${query}`);
+    },
+    getIndicatorCatalog() {
+      return client.get(`${apiVersionPrefix}/indicators/catalog`);
     },
     sync({ symbols, provider, start, end, allowFallback = true }) {
       return client.post(

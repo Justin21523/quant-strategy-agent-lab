@@ -1,4 +1,4 @@
-export function createStore(initialState) {
+function createStore(initialState) {
   let state = structuredClone(initialState);
   const listeners = new Set();
 
@@ -7,12 +7,12 @@ export function createStore(initialState) {
       return structuredClone(state);
     },
     setState(patch) {
-      const nextPatch = typeof patch === "function" ? patch(structuredClone(state)) : patch;
-      state = { ...state, ...nextPatch };
+      state = { ...state, ...patch };
       for (const listener of listeners) listener(structuredClone(state));
     },
     subscribe(listener) {
       listeners.add(listener);
+      listener(structuredClone(state));
       return () => listeners.delete(listener);
     },
   };

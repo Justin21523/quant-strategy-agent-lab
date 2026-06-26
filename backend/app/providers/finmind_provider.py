@@ -24,7 +24,7 @@ class FinMindMarketDataProvider:
         end: date | None = None,
     ) -> ProviderFetchResult:
         raise ProviderNotImplementedError(
-            "The FinMind adapter is reserved, but synchronization is not enabled in Phase 1.",
+            "The FinMind adapter is reserved, but synchronization is not enabled yet.",
             details={
                 "symbol": symbol.symbol,
                 "configured": self.configured,

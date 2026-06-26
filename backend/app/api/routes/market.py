@@ -4,12 +4,19 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Query
 
 from app.api.dependencies import get_market_data_service
+from app.domain.indicators import IndicatorBundle, IndicatorSeries, IndicatorWarning
 from app.domain.market import (
     CachedSymbolSummary,
     DataQualityWarning,
     MarketSeries,
     ProviderInfo,
     SyncStatus,
+)
+from app.schemas.indicators import (
+    IndicatorBundleResponse,
+    IndicatorPointResponse,
+    IndicatorSeriesResponse,
+    IndicatorWarningResponse,
 )
 from app.schemas.market import (
     DataQualityWarningResponse,
@@ -25,6 +32,7 @@ from app.schemas.market import (
     SyncRequest,
     SyncResponse,
 )
+from app.services.indicator_service import IndicatorService
 from app.services.market_data_service import MarketDataService
 
 router = APIRouter(prefix="/market", tags=["market data"])
@@ -60,9 +68,13 @@ def get_ohlcv(
     start: date | None = None,
     end: date | None = None,
     interval: Annotated[str, Query(pattern="^1d$")] = "1d",
+    include_indicators: bool = False,
 ) -> OHLCVResponse:
     series = service.get_series(symbol, start=start, end=end, interval=interval)
-    return _series_response(series)
+    indicators = None
+    if include_indicators:
+        indicators = IndicatorService().compute_default_bundle(series.bars)
+    return _series_response(series, indicators=indicators)
 
 
 @router.post("/sync", response_model=SyncResponse, summary="Synchronize provider data into cache")
@@ -106,7 +118,9 @@ def sync_market_data(request: SyncRequest, service: ServiceDependency) -> SyncRe
     )
 
 
-def _series_response(series: MarketSeries) -> OHLCVResponse:
+def _series_response(
+    series: MarketSeries, *, indicators: IndicatorBundle | None = None
+) -> OHLCVResponse:
     cache = series.cache_summary
     summary = SymbolResponse(
         symbol=series.symbol.symbol,
@@ -163,6 +177,39 @@ def _series_response(series: MarketSeries) -> OHLCVResponse:
             )
             for bar in series.bars
         ],
+        indicators=_indicator_bundle_response(indicators) if indicators else None,
+    )
+
+
+def _indicator_bundle_response(bundle: IndicatorBundle) -> IndicatorBundleResponse:
+    return IndicatorBundleResponse(
+        profile=bundle.profile,
+        count=bundle.count,
+        warnings=[_indicator_warning_response(warning) for warning in bundle.warnings],
+        series=[_indicator_series_response(item) for item in bundle.series],
+    )
+
+
+def _indicator_series_response(series: IndicatorSeries) -> IndicatorSeriesResponse:
+    return IndicatorSeriesResponse(
+        key=series.key,
+        kind=series.kind,
+        label=series.label,
+        pane=series.pane,
+        parameters=series.parameters,
+        warmup_period=series.warmup_period,
+        values=[
+            IndicatorPointResponse(date=point.date, values=point.values) for point in series.values
+        ],
+    )
+
+
+def _indicator_warning_response(warning: IndicatorWarning) -> IndicatorWarningResponse:
+    return IndicatorWarningResponse(
+        code=warning.code,
+        severity=warning.severity,
+        message=warning.message,
+        context=warning.context,
     )
 
 

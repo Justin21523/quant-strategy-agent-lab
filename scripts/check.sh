@@ -28,4 +28,4 @@ npm --prefix frontend run test
 printf '\n[6/6] Frontend production build\n'
 npm --prefix frontend run build
 
-printf '\nAll Phase 1 checks passed.\n'
+printf '\nAll Phase 3 checks passed.\n'

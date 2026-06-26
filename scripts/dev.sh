@@ -3,15 +3,9 @@ set -Eeuo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-if [[ ! -x "${ROOT_DIR}/.venv/bin/uvicorn" || ! -d "${ROOT_DIR}/frontend/node_modules" ]]; then
-  echo 'Dependencies are missing. Run make bootstrap first.' >&2
-  exit 1
-fi
-
 find_free_port() {
-  "${ROOT_DIR}/.venv/bin/python" - <<'PY'
+  python3 - <<'PY'
 import socket
-
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
     sock.bind(("127.0.0.1", 0))
     print(sock.getsockname()[1])
@@ -20,6 +14,11 @@ PY
 
 BACKEND_PORT="${BACKEND_PORT:-$(find_free_port)}"
 FRONTEND_PORT="${FRONTEND_PORT:-$(find_free_port)}"
+
+if [[ ! -x "${ROOT_DIR}/.venv/bin/uvicorn" || ! -d "${ROOT_DIR}/frontend/node_modules" ]]; then
+  echo 'Dependencies are missing. Run make bootstrap first.' >&2
+  exit 1
+fi
 
 backend_pid=''
 frontend_pid=''
@@ -56,15 +55,41 @@ setsid "${ROOT_DIR}/.venv/bin/uvicorn" app.main:app \
   --port "${BACKEND_PORT}" &
 backend_pid=$!
 
-setsid env \
-  BACKEND_PORT="${BACKEND_PORT}" \
-  VITE_API_DOCS_URL="http://127.0.0.1:${BACKEND_PORT}/docs" \
-  npm --prefix "${ROOT_DIR}/frontend" run dev -- \
+backend_ready=false
+for _ in {1..80}; do
+  if curl -fsS "http://127.0.0.1:${BACKEND_PORT}/api/v1/health" >/dev/null 2>&1; then
+    backend_ready=true
+    break
+  fi
+  sleep 0.1
+done
+
+if [[ "${backend_ready}" != true ]]; then
+  echo "FastAPI did not become healthy at http://127.0.0.1:${BACKEND_PORT}/api/v1/health." >&2
+  exit 1
+fi
+
+if ! kill -0 "${backend_pid}" 2>/dev/null; then
+  echo 'FastAPI failed to start.' >&2
+  exit 1
+fi
+
+BACKEND_PORT="${BACKEND_PORT}" \
+FRONTEND_PORT="${FRONTEND_PORT}" \
+VITE_API_DOCS_URL="http://127.0.0.1:${BACKEND_PORT}/docs" \
+setsid npm --prefix "${ROOT_DIR}/frontend" run dev -- \
   --host 0.0.0.0 \
-  --port "${FRONTEND_PORT}" &
+  --port "${FRONTEND_PORT}" \
+  --strictPort &
 frontend_pid=$!
 
-printf 'FastAPI: http://127.0.0.1:%s\nSwagger: http://127.0.0.1:%s/docs\nReDoc: http://127.0.0.1:%s/redoc\nFrontend: http://127.0.0.1:%s\nMarket Data Lab: http://127.0.0.1:%s/#/market-data\n' \
-  "${BACKEND_PORT}" "${BACKEND_PORT}" "${BACKEND_PORT}" "${FRONTEND_PORT}" "${FRONTEND_PORT}"
+cat <<EOF
+FastAPI: http://127.0.0.1:${BACKEND_PORT}
+Swagger: http://127.0.0.1:${BACKEND_PORT}/docs
+ReDoc: http://127.0.0.1:${BACKEND_PORT}/redoc
+Frontend: http://127.0.0.1:${FRONTEND_PORT}
+Market Data Lab: http://127.0.0.1:${FRONTEND_PORT}/#/market-data
+Strategy Builder: http://127.0.0.1:${FRONTEND_PORT}/#/strategy-builder
+EOF
 
 wait -n "${backend_pid}" "${frontend_pid}"

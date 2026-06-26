@@ -1,6 +1,7 @@
 import { createDataQualityList } from "../components/data-quality-list.js";
 import { createMarketDataTable } from "../components/market-data-table.js";
 import { createMetricCard } from "../components/metric-card.js";
+import { createIndicatorPreviewChart } from "../charts/indicator-preview-chart.js";
 import { createPricePreviewChart } from "../charts/price-preview-chart.js";
 import { ApiError } from "../core/api-client.js";
 import { createElement } from "../core/dom.js";
@@ -30,6 +31,16 @@ function errorMessage(error) {
     return error.details?.error?.message ?? error.message;
   }
   return error?.message ?? "Unexpected market-data error.";
+}
+
+function latestIndicatorValue(series, seriesKey, valueKey) {
+  const indicator = series.indicators?.series?.find((item) => item.key === seriesKey);
+  const points = indicator?.values ?? [];
+  for (let index = points.length - 1; index >= 0; index -= 1) {
+    const value = points[index]?.values?.[valueKey];
+    if (Number.isFinite(Number(value))) return formatPrice(value);
+  }
+  return "—";
 }
 
 export function createMarketDataPage() {
@@ -65,6 +76,10 @@ export function createMarketDataPage() {
     attributes: { type: "checkbox", name: "fallback", checked: "" },
   });
   fallbackInput.checked = true;
+  const indicatorsInput = createElement("input", {
+    attributes: { type: "checkbox", name: "includeIndicators", checked: "" },
+  });
+  indicatorsInput.checked = true;
 
   const loadButton = createElement("button", {
     className: "button button--primary",
@@ -80,12 +95,13 @@ export function createMarketDataPage() {
     className: "activity-banner",
     dataset: { status: "idle" },
     attributes: { role: "status", "aria-live": "polite" },
-    text: "Initializing Phase 1 market catalog…",
+    text: "Initializing Phase 2 market catalog and indicator engine…",
   });
   const metrics = createElement("div", { className: "metric-grid" });
   const metadata = createElement("dl", { className: "metadata-list" });
   const providerCards = createElement("div", { className: "provider-grid" });
   const chart = createPricePreviewChart();
+  const indicatorChart = createIndicatorPreviewChart();
   const table = createMarketDataTable();
   const quality = createDataQualityList();
 
@@ -107,7 +123,7 @@ export function createMarketDataPage() {
       createElement("div", {
         className: "form-grid",
         children: [
-          field("Symbol", symbolSelect, "Phase 1 catalog: AAPL, SPY, QQQ"),
+          field("Symbol", symbolSelect, "Phase 2 catalog: AAPL, SPY, QQQ"),
           field("Start date", startInput),
           field("End date", endInput),
           field(
@@ -117,12 +133,26 @@ export function createMarketDataPage() {
           ),
         ],
       }),
-      createElement("label", {
-        className: "checkbox-field",
+      createElement("div", {
+        className: "checkbox-grid",
         children: [
-          fallbackInput,
-          createElement("span", {
-            text: "Allow deterministic CSV fallback when the requested provider is unavailable",
+          createElement("label", {
+            className: "checkbox-field",
+            children: [
+              fallbackInput,
+              createElement("span", {
+                text: "Allow deterministic CSV fallback when the requested provider is unavailable",
+              }),
+            ],
+          }),
+          createElement("label", {
+            className: "checkbox-field",
+            children: [
+              indicatorsInput,
+              createElement("span", {
+                text: "Include Phase 2 indicator bundle: SMA, EMA, RSI, MACD, Bollinger Bands, ATR",
+              }),
+            ],
           }),
         ],
       }),
@@ -139,10 +169,10 @@ export function createMarketDataPage() {
       createElement("header", {
         className: "page-header page-header--wide",
         children: [
-          createElement("span", { className: "eyebrow", text: "Phase 1 · Market Data Layer" }),
-          createElement("h1", { text: "Inspect the data before trusting the strategy." }),
+          createElement("span", { className: "eyebrow", text: "Phase 2 · Indicator Engine" }),
+          createElement("h1", { text: "Turn normalized prices into strategy-ready signals." }),
           createElement("p", {
-            text: "Query normalized daily OHLCV from SQLite, inspect provider and adjustment metadata, synchronize an optional public source, and keep the demo operational offline.",
+            text: "Query normalized daily OHLCV from SQLite, compute deterministic technical indicators from the cached bars, and preview SMA / RSI output before the backtest engine consumes it.",
           }),
         ],
       }),
@@ -187,6 +217,24 @@ export function createMarketDataPage() {
               metadata,
             ],
           }),
+        ],
+      }),
+      createElement("article", {
+        className: "panel indicator-panel",
+        children: [
+          createElement("div", {
+            className: "panel__header",
+            children: [
+              createElement("div", {
+                children: [
+                  createElement("span", { className: "eyebrow", text: "Phase 2 indicators" }),
+                  createElement("h2", { text: "SMA overlay and RSI oscillator" }),
+                ],
+              }),
+              createElement("span", { className: "phase-chip", text: "SMA · RSI" }),
+            ],
+          }),
+          indicatorChart.element,
         ],
       }),
       createElement("div", {
@@ -271,6 +319,7 @@ export function createMarketDataPage() {
     endInput.disabled = isBusy;
     providerSelect.disabled = isBusy;
     fallbackInput.disabled = isBusy;
+    indicatorsInput.disabled = isBusy;
   }
 
   function selectedCatalogItem() {
@@ -305,7 +354,7 @@ export function createMarketDataPage() {
             }),
             createElement("p", { text: provider.notes }),
             createElement("small", {
-              text: provider.supports_sync ? "Synchronization enabled" : "No Phase 1 sync",
+              text: provider.supports_sync ? "Synchronization enabled" : "No sync in this phase",
             }),
           ],
         }),
@@ -341,6 +390,17 @@ export function createMarketDataPage() {
         value: formatCompact(last?.volume),
         meta: series.source.providers.join(" + "),
       }),
+      createMetricCard({
+        label: "Indicators",
+        value: String(series.indicators?.count ?? 0),
+        meta: series.indicators ? "SMA / EMA / RSI / MACD / BB / ATR" : "disabled",
+        tone: series.indicators ? "accent" : "neutral",
+      }),
+      createMetricCard({
+        label: "Last RSI 14",
+        value: latestIndicatorValue(series, "rsi_14", "rsi_14"),
+        meta: "Momentum oscillator",
+      }),
     );
     metadata.replaceChildren(
       metadataRow("Symbol", `${series.symbol.symbol} · ${series.symbol.name}`),
@@ -356,6 +416,7 @@ export function createMarketDataPage() {
     );
     quality.update(series.warnings);
     chart.update(bars);
+    indicatorChart.update(series);
     table.update(bars);
   }
 
@@ -397,12 +458,13 @@ export function createMarketDataPage() {
         symbol: symbolSelect.value,
         start: startInput.value,
         end: endInput.value,
+        includeIndicators: indicatorsInput.checked,
       });
       if (destroyed) return;
       renderSeries(series);
       setActivity(
         "success",
-        `${series.symbol.symbol}: loaded ${series.count} rows from ${series.source.providers.join(", ")}.`,
+        `${series.symbol.symbol}: loaded ${series.count} rows and ${series.indicators?.count ?? 0} indicator series from ${series.source.providers.join(", ")}.`,
       );
     } catch (error) {
       if (!destroyed) setActivity("error", errorMessage(error));
@@ -450,6 +512,7 @@ export function createMarketDataPage() {
     applyCatalogDateRange();
     loadSeries();
   });
+  indicatorsInput.addEventListener("change", loadSeries);
   loadButton.addEventListener("click", loadSeries);
   syncButton.addEventListener("click", syncSeries);
 

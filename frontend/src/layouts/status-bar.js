@@ -15,7 +15,7 @@ export function createStatusBar() {
         children: [
           createElement("span", { text: "Route" }),
           routeMessage,
-          createElement("span", { text: "v0.2.0 · Phase 1" }),
+          createElement("span", { text: "v0.4.0 · Phase 3" }),
         ],
       }),
     ],

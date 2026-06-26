@@ -4,22 +4,6 @@ function routeFromHash() {
   return path.startsWith("/") ? path : `/${path}`;
 }
 
-function normalizeHashPath(hash) {
-  const rawHash = hash.replace(/^#/, "");
-  const path = rawHash.split("?")[0] || "/";
-  return path.startsWith("/") ? path : `/${path}`;
-}
-
-export function matchRoute(routes, hash) {
-  const path = normalizeHashPath(hash);
-
-  if (Array.isArray(routes)) {
-    return routes.find((route) => route.path === path) ?? routes[0];
-  }
-
-  return routes[path] ?? routes["/"];
-}
-
 function resolvePage(page) {
   if (page instanceof HTMLElement) {
     return { element: page, destroy: () => {} };

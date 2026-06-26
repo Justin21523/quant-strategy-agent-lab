@@ -10,9 +10,9 @@
 |---:|:---:|---|---|
 | 0 | ✅ | Foundation | Frontend/backend run, connect, document, test, lint, and build |
 | 1 | ✅ | Market Data Layer | Validated OHLCV, provider fallback, SQLite cache, APIs, and data-inspection UI |
-| 2 | ▶ | Indicator Engine | Tested SMA, EMA, RSI, MACD, Bollinger Bands, and ATR |
-| 3 | ○ | Strategy Template + DSL | Templates produce a fully validated Strategy JSON document |
-| 4 | ○ | Backtest Engine | One strategy produces deterministic trades, equity, and costs |
+| 2 | ✅ | Indicator Engine | Tested SMA, EMA, RSI, MACD, Bollinger Bands, ATR, API bundle, and frontend SMA/RSI preview |
+| 3 | ✅ | Strategy Template + DSL | Templates produce a fully validated Strategy JSON document |
+| 4 | ▶ | Backtest Engine | One strategy produces deterministic trades, equity, and costs |
 | 5 | ○ | Backtest Lab UI | Complete choose-configure-run-inspect workflow |
 | 6 | ○ | Agent Timeline | Observable ordered workflow with success and failure states |
 | 7 | ○ | Performance Analyzer | Documented and tested return/risk/trade metrics |
@@ -23,65 +23,71 @@
 | 12 | ○ | Report Center | Markdown, JSON, and trade CSV exports are reproducible |
 | 13 | ○ | Portfolio Polish | Complete docs, screenshots, tests, deployment, and demo script |
 
-## Phase 1 completion record
+## Phase 2 completion record
 
-### Backend and data
+### Backend
 
-- provider protocol and source-neutral domain models;
-- deterministic synthetic CSV provider;
-- optional yfinance daily-history adapter;
-- reserved FinMind adapter and configuration boundary;
-- strict OHLCV normalization and typed quality warnings;
-- SQLite symbol, bar, and synchronization-audit schema;
-- startup seed import that does not overwrite synchronized rows;
-- cache statistics and readiness checks;
-- structured domain errors;
-- symbols, providers, OHLCV, and sync APIs.
+- provider-neutral `IndicatorService` built on normalized `MarketBar` rows;
+- domain models for catalog items, indicator series, points, bundles, and warnings;
+- SMA, EMA, RSI, MACD, Bollinger Bands, and ATR;
+- explicit warm-up and null-value behavior;
+- `/api/v1/indicators/catalog` endpoint;
+- `/api/v1/market/ohlcv?include_indicators=true` response bundle;
+- dynamic CORS origin regex for local development ports;
+- optional yfinance dependency behavior remains explicit and recoverable.
 
 ### Frontend
 
-- Market Data route in the modular hash router;
-- symbol selector and cached-range defaults;
-- explicit synchronization provider and fallback controls;
-- loading, success, warning, and error states;
-- provenance and data-quality panels;
-- native SVG close-price preview;
-- newest-row OHLCV table;
-- Phase 1 dashboard and navigation status.
+- Market Data Lab upgraded into Market + Indicator Lab;
+- `Include Phase 2 indicator bundle` checkbox;
+- native SVG close + SMA 20 + SMA 60 overlay;
+- native SVG RSI 14 oscillator with 70/30 guide lines;
+- metric cards for indicator count and latest RSI;
+- service contract updated for `include_indicators=true`.
 
-### Validation
+### Developer workflow
 
-- 20 backend tests;
-- 92.31% backend branch coverage in the acceptance run;
-- 3 focused frontend unit tests;
-- Ruff, ESLint, Prettier, and production build pass;
-- live FastAPI/Vite smoke test;
-- Vite `/api` proxy verified;
-- fallback behavior verified with the optional network provider disabled by configuration;
-- no development-server process left after shutdown.
+- `./scripts/dev.sh` selects dynamic backend and frontend ports when not provided;
+- dev output prints FastAPI, Swagger, ReDoc, Frontend, and Market Data Lab URLs;
+- Vite `/api` proxy targets the dynamic backend port from the same dev run.
 
-## Phase 2 — Indicator Engine
+
+## Phase 3 completion record
+
+### Backend
+
+- `StrategyTemplateService` renders deterministic templates into Strategy JSON DSL;
+- five MVP templates are available: Buy and Hold, MA Crossover, MA Crossover + RSI Filter, RSI Mean Reversion, and MACD Trend Following;
+- `/api/v1/strategies/templates` lists typed template metadata;
+- `/api/v1/strategies/templates/{template_id}/render` returns the backend-authoritative DSL preview;
+- `/api/v1/strategies/validate` checks DSL structure, indicator ids, rule references, capital assumptions, and risk assumptions;
+- template parameter errors use the same structured domain-error envelope as market-data errors.
+
+### Frontend
+
+- Strategy Builder route implemented at `/#/strategy-builder`;
+- template cards, context controls, typed parameter editor, JSON preview, validation list, and metadata panels;
+- all API calls go through `strategy-service.js`;
+- no arbitrary code editor is exposed in Phase 3.
+
+### Developer workflow
+
+- `./scripts/dev.sh` prints the Strategy Builder URL using the selected dynamic frontend port;
+- Vite proxy validation uses the printed frontend port, not a fixed port assumption.
+
+## Phase 3 — Strategy Template + DSL
 
 ### Scope
 
-- add pure, typed functions for SMA, EMA, RSI, MACD, Bollinger Bands, and ATR;
-- define warm-up and missing-value behavior;
-- calculate indicators from normalized cached bars only;
-- expose an indicator query contract without mutating raw bars;
-- add property/example tests against hand-calculated fixtures;
-- add frontend overlays/previews for at least SMA and RSI.
+- define Strategy JSON DSL validation models;
+- implement Buy and Hold, MA Crossover, MA Crossover + RSI Filter, RSI Mean Reversion, and MACD Trend Following templates;
+- map template parameters to indicator specs and rule conditions;
+- add frontend Strategy Builder with JSON preview and validation messages;
+- keep LLM parsing out of scope until the controlled DSL is stable.
 
-### Quality questions
+### Exit condition
 
-- Is each formula documented?
-- Does every indicator define its warm-up period?
-- Are adjusted or raw prices used explicitly?
-- Are results aligned to the original bar dates without look-ahead?
-- Can indicator output be reproduced from the same cache and parameters?
-
-### Phase 2 exit condition
-
-A user can request supported indicators for a cached daily series, receive date-aligned values and metadata, and inspect at least SMA and RSI in the frontend. Every implementation has deterministic tests and documented warm-up semantics.
+A user can select a strategy template, modify parameters, see a valid Strategy JSON document, and understand which indicator keys and rule operators will be used by the future backtest engine.
 
 ## Dependency order
 
@@ -94,11 +100,11 @@ gantt
     section Foundation and data
     Phase 0 foundation             :done, p0, 2026-06-25, 1d
     Phase 1 market data            :done, p1, after p0, 1d
-    Phase 2 indicators             :active, p2, after p1, 1d
-    Phase 3 strategy DSL           :p3, after p2, 1d
+    Phase 2 indicators             :done, p2, after p1, 1d
+    Phase 3 strategy DSL           :done, p3, after p2, 1d
 
     section Backtesting MVP
-    Phase 4 engine                 :p4, after p3, 1d
+    Phase 4 engine                 :active, p4, after p3, 1d
     Phase 5 frontend               :p5, after p4, 1d
     Phase 6 timeline               :p6, after p5, 1d
     Phase 7 metrics                :p7, after p6, 1d
