@@ -1,48 +1,43 @@
-# Python
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+.env
+.env.*
+!.env.example
+backend/.env
+frontend/.env
+
+.venv/
+venv/
 __pycache__/
 *.py[cod]
-*$py.class
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
 .coverage
+coverage.xml
 htmlcov/
-.venv/
-venv/
+*.egg-info/
 
-# Environment and secrets
-.env
-.env.*
-!.env.example
-
-# Node / Vite
-node_modules/
 frontend/node_modules/
 frontend/dist/
-*.tsbuildinfo
+frontend/.vite/
+npm-debug.log*
 
-# Runtime data
 backend/data/raw/*
 backend/data/processed/*
 backend/data/cache/*
 !backend/data/raw/.gitkeep
 !backend/data/processed/.gitkeep
 !backend/data/cache/.gitkeep
+*.db
 *.sqlite
 *.sqlite3
-*.db
-
-# Logs
-*.log
+reports/
+exports/
 logs/
-
-# Editors / OS
-.vscode/
-.idea/
-.DS_Store
-Thumbs.db
-
-# Build artifacts
-build/
-dist/
-*.egg-info/
+*.log

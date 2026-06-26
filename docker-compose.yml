@@ -5,14 +5,27 @@ services:
       dockerfile: backend/Dockerfile
     environment:
       QSA_ENVIRONMENT: container
-      QSA_CORS_ORIGINS: http://localhost:8080
+      QSA_BACKEND_CORS_ORIGINS: '["http://localhost:8080"]'
+      QSA_MARKET_DATABASE_PATH: /data/market_data.sqlite3
+      QSA_MARKET_CSV_SEED_DIR: /app/backend/data/seed
+      QSA_MARKET_SEED_DEMO_DATA: "true"
+      QSA_MARKET_YFINANCE_ENABLED: "true"
+    volumes:
+      - market-cache:/data
     ports:
       - "8000:8000"
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health')"]
+      test:
+        - CMD
+        - python
+        - -c
+        - >-
+          import urllib.request;
+          urllib.request.urlopen('http://127.0.0.1:8000/api/v1/ready', timeout=3).read()
       interval: 10s
-      timeout: 3s
+      timeout: 5s
       retries: 5
+      start_period: 10s
 
   frontend:
     build:
@@ -23,3 +36,6 @@ services:
         condition: service_healthy
     ports:
       - "8080:80"
+
+volumes:
+  market-cache:

@@ -1,48 +1,55 @@
-.PHONY: help bootstrap backend-dev frontend-dev dev test test-backend test-frontend lint format build check clean
+SHELL := /usr/bin/env bash
+.DEFAULT_GOAL := help
 
-VENV_DIR ?= .venv
-VENV_PYTHON := $(VENV_DIR)/bin/python
+.PHONY: help bootstrap dev backend frontend seed test lint format build check clean init-git
 
 help:
 	@printf '%s\n' \
 	  'Quant Strategy Agent Lab commands:' \
-	  '  make bootstrap      Install backend and frontend dependencies' \
-	  '  make dev            Start FastAPI and Vite together' \
-	  '  make backend-dev    Start FastAPI only' \
-	  '  make frontend-dev   Start Vite only' \
-	  '  make test           Run backend and frontend tests' \
-	  '  make lint           Run Ruff and ESLint' \
-	  '  make format         Format backend code' \
-	  '  make build          Build the frontend production bundle' \
-	  '  make check          Run lint, tests, and frontend build' \
-	  '  make clean          Remove local build and cache artifacts'
+	  '  make bootstrap  Install backend and frontend dependencies' \
+	  '  make dev        Start FastAPI and Vite together' \
+	  '  make backend    Start only FastAPI' \
+	  '  make frontend   Start only Vite' \
+	  '  make seed       Regenerate deterministic offline OHLCV fixtures' \
+	  '  make test       Run backend and frontend tests' \
+	  '  make lint       Run Python and JavaScript linters' \
+	  '  make format     Format backend and frontend code' \
+	  '  make build      Build the frontend' \
+	  '  make check      Run all Phase 1 quality gates' \
+	  '  make clean      Remove generated files and local cache' \
+	  '  make init-git   Initialize a local Git repository'
 
 bootstrap:
 	./scripts/bootstrap.sh
 
-backend-dev:
-	$(VENV_PYTHON) -m uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8000 --reload
-
-frontend-dev:
-	npm --prefix frontend run dev
-
 dev:
 	./scripts/dev.sh
 
-test: test-backend test-frontend
+backend:
+	@test -x .venv/bin/uvicorn || (echo 'Run make bootstrap first.' && exit 1)
+	.venv/bin/uvicorn app.main:app --app-dir backend --reload --host 0.0.0.0 --port 8000
 
-test-backend:
-	$(VENV_PYTHON) -m pytest backend/tests
+frontend:
+	@test -d frontend/node_modules || (echo 'Run make bootstrap first.' && exit 1)
+	npm --prefix frontend run dev
 
-test-frontend:
-	npm --prefix frontend test
+seed:
+	python3 scripts/generate_demo_market_data.py
+
+test:
+	@test -x .venv/bin/python || (echo 'Run make bootstrap first.' && exit 1)
+	cd backend && ../.venv/bin/python -m pytest
+	npm --prefix frontend run test
 
 lint:
-	$(VENV_PYTHON) -m ruff check backend
+	@test -x .venv/bin/ruff || (echo 'Run make bootstrap first.' && exit 1)
+	.venv/bin/ruff check backend scripts --config backend/pyproject.toml
 	npm --prefix frontend run lint
 
 format:
-	$(VENV_PYTHON) -m ruff format backend
+	@test -x .venv/bin/ruff || (echo 'Run make bootstrap first.' && exit 1)
+	.venv/bin/ruff format backend scripts --config backend/pyproject.toml
+	npm --prefix frontend run format
 
 build:
 	npm --prefix frontend run build
@@ -51,5 +58,10 @@ check:
 	./scripts/check.sh
 
 clean:
-	rm -rf .pytest_cache .ruff_cache backend/.pytest_cache backend/.ruff_cache frontend/dist
-	find backend -type d -name __pycache__ -prune -exec rm -rf {} +
+	rm -rf .ruff_cache frontend/dist frontend/.vite backend/.pytest_cache backend/.ruff_cache backend/htmlcov
+	rm -f .coverage backend/.coverage backend/coverage.xml backend/data/cache/*.sqlite3
+	find backend scripts -type d -name '__pycache__' -prune -exec rm -rf {} +
+	find backend scripts -type f -name '*.py[co]' -delete
+
+init-git:
+	./scripts/init-git.sh

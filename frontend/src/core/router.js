@@ -1,56 +1,66 @@
-function normalizePath(rawPath) {
-  if (!rawPath || rawPath === '#') return '/';
-  const withoutHash = rawPath.startsWith('#') ? rawPath.slice(1) : rawPath;
-  const withLeadingSlash = withoutHash.startsWith('/') ? withoutHash : `/${withoutHash}`;
-  return withLeadingSlash.length > 1 ? withLeadingSlash.replace(/\/$/, '') : withLeadingSlash;
+function routeFromHash() {
+  const rawHash = window.location.hash.replace(/^#/, "");
+  const path = rawHash.split("?")[0] || "/";
+  return path.startsWith("/") ? path : `/${path}`;
 }
 
-export function matchRoute(routes, rawPath) {
-  const path = normalizePath(rawPath);
-  return routes.find((route) => route.path === path) ?? routes[0];
+function normalizeHashPath(hash) {
+  const rawHash = hash.replace(/^#/, "");
+  const path = rawHash.split("?")[0] || "/";
+  return path.startsWith("/") ? path : `/${path}`;
 }
 
-export function createRouter({ routes, outlet, context = {}, onRouteChange = () => {} }) {
-  if (!(outlet instanceof HTMLElement)) {
-    throw new TypeError('Router outlet must be an HTMLElement.');
+export function matchRoute(routes, hash) {
+  const path = normalizeHashPath(hash);
+
+  if (Array.isArray(routes)) {
+    return routes.find((route) => route.path === path) ?? routes[0];
   }
 
-  let currentCleanup = null;
+  return routes[path] ?? routes["/"];
+}
+
+function resolvePage(page) {
+  if (page instanceof HTMLElement) {
+    return { element: page, destroy: () => {} };
+  }
+  if (page?.element instanceof HTMLElement) {
+    return {
+      element: page.element,
+      destroy: typeof page.destroy === "function" ? page.destroy : () => {},
+    };
+  }
+  throw new Error("A route must return an HTMLElement or { element, destroy } page object.");
+}
+
+export function createRouter({ outlet, routes, notFound, onRouteChange = () => {} }) {
+  if (!outlet) throw new Error("Router outlet is required.");
+  let activePage = null;
 
   function render() {
-    const route = matchRoute(routes, window.location.hash);
-
-    if (typeof currentCleanup === 'function') {
-      currentCleanup();
-      currentCleanup = null;
-    }
-
-    const page = route.render({ ...context, route });
-    const element = page instanceof HTMLElement ? page : page.element;
-
-    if (!(element instanceof HTMLElement)) {
-      throw new TypeError(`Route ${route.path} did not render an HTMLElement.`);
-    }
-
-    outlet.replaceChildren(element);
-    currentCleanup = page.destroy ?? null;
-    document.title = `${route.label} · Quant Strategy Agent Lab`;
-    onRouteChange({ route });
+    const path = routeFromHash();
+    const pageFactory = routes[path] ?? notFound;
+    const nextPage = resolvePage(pageFactory({ path }));
+    activePage?.destroy();
+    activePage = nextPage;
+    outlet.replaceChildren(nextPage.element);
+    onRouteChange(path);
+    outlet.focus({ preventScroll: true });
+    window.scrollTo({ top: 0, behavior: "instant" });
   }
 
-  function start() {
-    window.addEventListener('hashchange', render);
-    render();
-  }
-
-  function stop() {
-    window.removeEventListener('hashchange', render);
-    if (typeof currentCleanup === 'function') currentCleanup();
-  }
-
-  function navigate(path) {
-    window.location.hash = normalizePath(path);
-  }
-
-  return { start, stop, navigate, render };
+  return {
+    start() {
+      window.addEventListener("hashchange", render);
+      render();
+    },
+    stop() {
+      window.removeEventListener("hashchange", render);
+      activePage?.destroy();
+      activePage = null;
+    },
+    navigate(path) {
+      window.location.hash = path;
+    },
+  };
 }

@@ -1,40 +1,42 @@
-"""Phase 0 API contract tests."""
-
 from fastapi.testclient import TestClient
 
 
-def test_root_exposes_metadata(client: TestClient) -> None:
+def test_root_metadata(client: TestClient) -> None:
     response = client.get("/")
     assert response.status_code == 200
-    payload = response.json()
-    assert payload["phase"] == "0-foundation"
-    assert payload["docs"] == "/docs"
-    assert payload["health"] == "/api/v1/health"
+    body = response.json()
+    assert body["phase"] == "phase-1"
+    assert body["version"] == "0.2.0"
+    assert body["docs"] == "/docs"
+    assert body["market"] == "/api/v1/market/symbols"
+    assert "not investment advice" in body["disclaimer"].lower()
 
 
-def test_health_endpoint(client: TestClient) -> None:
-    response = client.get("/api/v1/health")
-    assert response.status_code == 200
-    payload = response.json()
-    assert payload["status"] == "ok"
-    assert payload["service"] == "Quant Strategy Agent Lab API"
-    assert payload["version"] == "0.1.0"
-    assert "timestamp" in payload
+def test_health_and_readiness(client: TestClient) -> None:
+    health = client.get("/api/v1/health")
+    assert health.status_code == 200
+    assert health.json()["phase"] == "phase-1"
+    assert health.json()["version"] == "0.2.0"
+
+    readiness = client.get("/api/v1/ready")
+    assert readiness.status_code == 200
+    assert readiness.json() == {
+        "status": "ready",
+        "checks": {"api": "ok", "database": "ok"},
+    }
 
 
-def test_system_info_reports_ready_and_planned_capabilities(client: TestClient) -> None:
-    response = client.get("/api/v1/system/info")
-    assert response.status_code == 200
-    payload = response.json()
-    statuses = {item["key"]: item["status"] for item in payload["capabilities"]}
-    assert payload["phase"] == "0"
-    assert statuses["frontend_shell"] == "ready"
-    assert statuses["market_data"] == "planned"
+def test_openapi_and_system_info(client: TestClient) -> None:
+    openapi = client.get("/api/v1/openapi.json")
+    assert openapi.status_code == 200
+    paths = openapi.json()["paths"]
+    assert "/api/v1/market/symbols" in paths
+    assert "/api/v1/market/ohlcv" in paths
+    assert "/api/v1/market/sync" in paths
 
-
-def test_openapi_schema_is_available(client: TestClient) -> None:
-    response = client.get("/openapi.json")
-    assert response.status_code == 200
-    schema = response.json()
-    assert schema["info"]["title"] == "Quant Strategy Agent Lab API"
-    assert "/api/v1/health" in schema["paths"]
+    info = client.get("/api/v1/system/info")
+    assert info.status_code == 200
+    assert info.json()["phase_name"] == "Market Data Layer"
+    body = info.json()
+    assert any(item["key"] == "sqlite_cache" for item in body["capabilities"])
+    assert body["cache"] == {"symbols": 3, "bars": 2346, "sync_records": 0}

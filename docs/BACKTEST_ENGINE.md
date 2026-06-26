@@ -1,54 +1,48 @@
-# Backtest Engine Design Notes
+# Backtest Engine Design
 
-## Status
-
-Planned for Phase 4. This document records invariants early so the UI cannot dictate incorrect financial semantics later.
+> Status: planned for Phase 4. Phase 1 only establishes the normalized market-data input contract.
 
 ## Required inputs
 
-- normalized OHLCV bars with source and timezone metadata;
-- validated Strategy JSON DSL;
-- initial cash and position-sizing rule;
-- commission and slippage assumptions;
-- execution timing convention;
-- benchmark definition.
+Every run must freeze:
 
-## Execution questions that must be explicit
+- symbol, market, interval, provider lineage, and effective date range;
+- selected price field (`close` or `adjusted_close`);
+- Strategy DSL version and normalized strategy document;
+- initial capital;
+- commission and slippage;
+- order timing and fill model;
+- position sizing and cash constraints;
+- warm-up rows;
+- benchmark;
+- engine version and generation timestamp.
 
-- Is a signal calculated on close and filled on the next open, or filled on the same close?
-- Can multiple positions overlap?
-- Are fractional shares permitted?
-- How are gaps through stop prices handled?
-- Are dividends and splits included in the series?
-- What occurs when volume or price is missing?
+## Timing rule
 
-The first engine will prefer conservative, understandable assumptions over maximum flexibility.
+The MVP will avoid same-bar look-ahead:
+
+```text
+signal calculated from bar t close
+→ order submitted after bar t
+→ fill at bar t+1 open, subject to costs and available cash
+```
 
 ## Required outputs
 
-```text
-run metadata
-strategy snapshot
-warnings
-signal series
-trade ledger
-equity series
-drawdown series
-benchmark series
-summary metrics
-engine version
-```
+- immutable run identifier and assumptions;
+- entry/exit signals;
+- trade ledger;
+- daily cash, holdings, equity, and drawdown series;
+- rejected-order diagnostics;
+- benchmark curve;
+- metric inputs and results.
 
-## Integrity rules
+## Integrity checks
 
-- no look-ahead access to future bars;
-- warm-up periods cannot trade before all required indicators are valid;
-- transaction costs are applied on every fill;
-- cash and positions reconcile after each event;
-- trade ledger totals reconcile to final equity;
-- no silent replacement of NaN or infinite values;
-- identical input data and configuration must produce identical output.
-
-## Testing strategy
-
-Hand-calculated tiny datasets will be used before real provider data. Tests must cover no-trade, one-trade, losing-trade, gap, warm-up, cost, and end-of-data cases.
+- no indicator may read future rows;
+- trade and equity ledgers must reconcile;
+- fees and slippage must be visible;
+- missing next-bar fills must be deterministic;
+- stop-loss gap behavior must be documented;
+- repeated runs over the same data and DSL must match;
+- fixture-data runs remain visibly labeled.

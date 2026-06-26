@@ -1,48 +1,103 @@
-# Linux Development Workflow
+# Linux Development Guide
 
-## Supported runtime baseline
-
-- Python 3.11+
-- Node.js 20.19+, 22.12+, or newer compatible releases
-- npm
-
-The repository includes `.python-version` and `.nvmrc` as convenience hints, while runtime checks in `scripts/bootstrap.sh` enforce minimum versions.
-
-## First setup
+## Bootstrap
 
 ```bash
-cp .env.example .env
+make bootstrap
+```
+
+Equivalent command:
+
+```bash
 ./scripts/bootstrap.sh
 ```
 
-The script:
+The script verifies Python and Node versions, creates `.venv`, installs `backend/requirements-dev.txt`, copies `backend/.env.example` when necessary, and installs frontend packages using `npm ci`.
 
-1. checks Python and Node versions;
-2. creates `.venv`;
-3. installs backend runtime and development dependencies;
-4. installs frontend dependencies using `npm ci`;
-5. creates `.env` when missing.
-
-## Run both applications
+## Run both services
 
 ```bash
-./scripts/dev.sh
+make dev
 ```
 
-The script starts Uvicorn and Vite, keeps both attached to the terminal, and cleans up child processes on exit.
+Endpoints:
 
-## Run applications separately
-
-Terminal 1:
-
-```bash
-make backend-dev
+```text
+Frontend     http://127.0.0.1:5173
+FastAPI      http://127.0.0.1:8000
+Swagger      http://127.0.0.1:8000/docs
+Market Lab   http://127.0.0.1:5173/#/market-data
 ```
 
-Terminal 2:
+`Ctrl+C` terminates the Uvicorn and npm/Vite process groups, including reload children.
+
+## Run independently
 
 ```bash
-make frontend-dev
+make backend
+make frontend
+```
+
+## Configuration
+
+Backend variables use the `QSA_` prefix and are loaded from `backend/.env` or the process environment.
+
+```bash
+cp backend/.env.example backend/.env
+```
+
+Useful offline configuration:
+
+```text
+QSA_MARKET_YFINANCE_ENABLED=false
+QSA_MARKET_SEED_DEMO_DATA=true
+```
+
+Use a temporary database for isolated manual tests:
+
+```bash
+QSA_MARKET_DATABASE_PATH=/tmp/qsal.sqlite3 make backend
+```
+
+## Database inspection
+
+```bash
+sqlite3 backend/data/cache/market_data.sqlite3
+```
+
+Useful SQL:
+
+```sql
+.tables
+SELECT symbol, COUNT(*) FROM ohlcv_bars GROUP BY symbol;
+SELECT symbol, provider, MIN(trade_date), MAX(trade_date)
+FROM ohlcv_bars
+GROUP BY symbol, provider;
+SELECT run_id, symbol, status, requested_provider, provider_used, fallback_used
+FROM market_sync_runs
+ORDER BY created_at DESC;
+```
+
+The cache directory is gitignored. Removing the database is safe during development; the next backend startup recreates the schema and imports missing fixture rows.
+
+## Fixture regeneration
+
+```bash
+.venv/bin/python scripts/generate_demo_market_data.py
+```
+
+After regeneration, run all tests. The fixtures are synthetic and must stay labeled as such in `symbols.csv`, API responses, documentation, and UI.
+
+## API examples
+
+```bash
+curl http://127.0.0.1:8000/api/v1/market/symbols
+
+curl 'http://127.0.0.1:8000/api/v1/market/ohlcv?symbol=SPY&start=2023-01-03&end=2023-02-01'
+
+curl -X POST http://127.0.0.1:8000/api/v1/market/sync \
+  -H 'Content-Type: application/json' \
+  -d '{"symbols":["QQQ"],"provider":"auto","start":"2023-01-03","end":"2023-01-31","allow_fallback":true}'
 ```
 
 ## Quality gate
@@ -51,70 +106,73 @@ make frontend-dev
 make check
 ```
 
-A change is not considered complete unless:
+Individual commands:
 
-- Python lint passes;
-- JavaScript lint passes;
-- backend API tests pass;
-- frontend unit tests pass;
-- the frontend production build succeeds.
-
-## Git workflow
-
-Recommended branch names:
-
-```text
-phase/01-market-data
-feature/market-symbol-endpoint
-fix/frontend-health-timeout
-chore/dependency-update
+```bash
+cd backend && ../.venv/bin/ruff check .
+cd backend && ../.venv/bin/ruff format --check .
+cd backend && ../.venv/bin/python -m pytest
+npm --prefix frontend run lint
+npm --prefix frontend run format:check
+npm --prefix frontend run test
+npm --prefix frontend run build
 ```
 
-Recommended commit style:
+## Code rules
 
-```text
-feat(market): add validated symbol catalog endpoint
-test(indicators): cover RSI flat-series behavior
-docs(strategy): define crossover DSL semantics
-fix(frontend): cancel stale health requests on route change
+### Python
+
+- type public boundaries;
+- keep route handlers thin;
+- use domain errors instead of transport-specific exceptions in services;
+- never persist unnormalized provider rows;
+- keep SQL inside repositories;
+- test fallback and failure behavior, not only happy paths.
+
+### JavaScript
+
+- use ES modules and named exports;
+- keep HTTP construction in services;
+- keep DOM composition in pages/components;
+- use `textContent`/safe DOM creation rather than injecting external HTML;
+- destroy page-owned listeners, timers, streams, observers, and charts during route changes;
+- represent loading, empty, error, warning, and success states explicitly.
+
+### CSS
+
+- use existing design tokens;
+- keep route-specific styles modular;
+- preserve visible keyboard focus;
+- test desktop and narrow layouts;
+- do not encode financial meaning through color alone.
+
+## Docker
+
+```bash
+docker compose up --build
 ```
 
-Each phase should end with:
+Inspect:
 
-1. passing quality checks;
-2. updated API and architecture documentation;
-3. a clear manual demo path;
-4. a tagged milestone or release note.
-
-## Environment variables
-
-Copy `.env.example` to `.env`. Do not commit `.env`.
-
-| Variable | Purpose |
-|---|---|
-| `QSA_ENVIRONMENT` | Backend runtime label |
-| `QSA_LOG_LEVEL` | Planned logging level |
-| `QSA_API_PREFIX` | Versioned API root |
-| `QSA_CORS_ORIGINS` | Comma-separated browser origins |
-| `VITE_API_BASE_URL` | Browser API base path |
+```text
+Frontend  http://localhost:8080
+Backend   http://localhost:8000
+Swagger   http://localhost:8000/docs
+```
 
 ## Troubleshooting
 
-### Port already in use
+### API appears offline
 
 ```bash
-ss -ltnp | grep -E ':(5173|8000)\b'
+curl -v http://127.0.0.1:8000/api/v1/health
+ss -ltnp | grep -E ':8000|:5173'
 ```
 
-### Recreate dependencies
+### External synchronization fails
 
-```bash
-rm -rf .venv frontend/node_modules
-./scripts/bootstrap.sh
-```
+The network provider is optional. Check DNS/network access and provider terms, or use `provider: "csv"`. With fallback enabled, the sync audit records both the failed external attempt and CSV success.
 
-### Verify backend only
+### Cache contains fixture rows after external sync
 
-```bash
-curl -fsS http://127.0.0.1:8000/api/v1/health | python3 -m json.tool
-```
+Fixture import never overwrites an existing date, but an external sync only replaces dates inside its requested range. Query `provider` by date to see which portions remain synthetic.

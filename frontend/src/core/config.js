@@ -1,4 +1,5 @@
-export const APP_NAME = 'Quant Strategy Agent Lab';
-export const APP_VERSION = '0.1.0';
-export const CURRENT_PHASE = 'Phase 0 · Foundation';
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api/v1';
+const environment = import.meta.env ?? {};
+
+export const apiBaseUrl = (environment.VITE_API_BASE_URL ?? "").replace(/\/$/, "");
+export const apiDocsUrl = environment.VITE_API_DOCS_URL ?? "http://127.0.0.1:8000/docs";
+export const apiVersionPrefix = "/api/v1";

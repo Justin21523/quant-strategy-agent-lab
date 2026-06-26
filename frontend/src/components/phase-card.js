@@ -1,6 +1,6 @@
 export function createPhaseCard({ number, title, description, status }) {
-  const article = document.createElement('article');
-  article.className = 'phase-card';
+  const article = document.createElement("article");
+  article.className = "phase-card";
   article.innerHTML = `
     <div class="phase-card__header">
       <span>Phase ${number}</span>

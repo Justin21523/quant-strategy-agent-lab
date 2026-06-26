@@ -1,55 +1,62 @@
-import { API_BASE_URL } from './config.js';
+import { apiBaseUrl } from "./config.js";
 
 export class ApiError extends Error {
-  constructor(message, { status = 0, payload = null } = {}) {
+  constructor(message, { status = 0, details = null } = {}) {
     super(message);
-    this.name = 'ApiError';
+    this.name = "ApiError";
     this.status = status;
-    this.payload = payload;
+    this.details = details;
   }
 }
 
-export function createApiClient({ baseUrl = API_BASE_URL, timeoutMs = 5000 } = {}) {
-  async function request(path, options = {}) {
+export function createApiClient({ baseUrl = apiBaseUrl, timeoutMs = 6000 } = {}) {
+  async function request(path, requestOptions = {}) {
+    const { timeoutMs: requestTimeout = timeoutMs, ...options } = requestOptions;
     const controller = new AbortController();
-    const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
+    const timeoutId = globalThis.setTimeout(() => controller.abort(), requestTimeout);
 
     try {
       const response = await fetch(`${baseUrl}${path}`, {
         ...options,
         headers: {
-          Accept: 'application/json',
-          ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+          Accept: "application/json",
+          ...(options.body ? { "Content-Type": "application/json" } : {}),
           ...options.headers,
         },
-        signal: controller.signal,
+        signal: options.signal ?? controller.signal,
       });
-
-      const contentType = response.headers.get('content-type') ?? '';
-      const payload = contentType.includes('application/json')
+      const contentType = response.headers.get("content-type") ?? "";
+      const payload = contentType.includes("application/json")
         ? await response.json()
         : await response.text();
 
       if (!response.ok) {
-        throw new ApiError(`API request failed with status ${response.status}.`, {
+        const apiMessage = payload?.error?.message;
+        throw new ApiError(apiMessage ?? `API request failed with status ${response.status}.`, {
           status: response.status,
-          payload,
+          details: payload,
         });
       }
       return payload;
     } catch (error) {
-      if (error instanceof ApiError) throw error;
-      if (error instanceof DOMException && error.name === 'AbortError') {
-        throw new ApiError(`API request timed out after ${timeoutMs} ms.`);
+      if (error.name === "AbortError") {
+        throw new ApiError(`API request timed out after ${requestTimeout} ms.`);
       }
-      throw new ApiError('Unable to reach the API.', { payload: error });
+      if (error instanceof ApiError) throw error;
+      throw new ApiError("Unable to reach the API.", { details: error });
     } finally {
-      window.clearTimeout(timeoutId);
+      globalThis.clearTimeout(timeoutId);
     }
   }
 
   return {
-    get: (path) => request(path),
-    post: (path, body) => request(path, { method: 'POST', body: JSON.stringify(body) }),
+    get(path, options) {
+      return request(path, { ...options, method: "GET" });
+    },
+    post(path, body, options) {
+      return request(path, { ...options, method: "POST", body: JSON.stringify(body) });
+    },
   };
 }
+
+export const apiClient = createApiClient();

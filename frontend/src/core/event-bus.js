@@ -1,8 +1,12 @@
-export function createEventBus() {
-  const target = new EventTarget();
+export const EVENTS = Object.freeze({
+  ROUTE_CHANGED: "route:changed",
+  BACKTEST_REQUESTED: "backtest:requested",
+});
 
+function createEventBus() {
+  const target = new EventTarget();
   return {
-    emit(type, detail) {
+    emit(type, detail = {}) {
       target.dispatchEvent(new CustomEvent(type, { detail }));
     },
     on(type, listener) {
@@ -12,3 +16,5 @@ export function createEventBus() {
     },
   };
 }
+
+export const eventBus = createEventBus();

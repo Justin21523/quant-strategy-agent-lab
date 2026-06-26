@@ -1,56 +1,67 @@
 # Frontend Architecture
 
-## Objective
+## Goal
 
-Practice browser-native HTML, CSS, JavaScript, DOM events, modules, state, network calls, and rendering without allowing the codebase to collapse into one global script.
+The frontend intentionally uses HTML, CSS, and Vanilla JavaScript so the project exercises browser fundamentals without collapsing into one global script.
 
-## Layer responsibilities
+## Module map
 
-| Layer | Owns | Must not own |
-|---|---|---|
-| `core/` | router, store, event bus, API transport, configuration | page-specific UI |
-| `layouts/` | persistent shell, navigation, top/status bars | quantitative logic |
-| `pages/` | route-level orchestration and page lifecycle | raw URL construction |
-| `components/` | reusable DOM output with explicit inputs | data fetching |
-| `services/` | use-case-oriented API calls | DOM mutation |
-| `charts/` | future vendor chart adapters | page state |
-| `utils/` | pure reusable helpers | global mutable state |
-| `styles/` | design tokens, base, layout, components, pages | inline business rules |
+| Directory | Responsibility |
+|---|---|
+| `core/` | Router, store, event bus, API client, configuration, DOM helper |
+| `layouts/` | Persistent shell, sidebar, topbar, status bar |
+| `pages/` | Route-level composition and transient page state |
+| `components/` | Reusable DOM units with small update methods |
+| `charts/` | Visualization adapters; chart-specific DOM stays isolated |
+| `services/` | API-facing use cases and endpoint construction |
+| `utils/` | Pure formatting and transformation helpers |
+| `styles/` | Tokens, shell, components, pages, feature styles, responsiveness |
 
-## Page contract
+## Market Data page state
 
-A route renderer returns either an `HTMLElement` or this lifecycle object:
+The page owns:
 
-```js
-{
-  element: HTMLElement,
-  destroy() {
-    // remove listeners, timers, observers, and chart instances
-  },
-}
-```
+- catalog response;
+- selected symbol;
+- start/end inputs;
+- provider and fallback inputs;
+- current OHLCV response;
+- current request status.
 
-The router invokes `destroy()` before replacing a page. This matters later because financial charts and long-running Agent event streams otherwise leak listeners and memory.
+The global store owns only shell-level state such as route and API connectivity. This prevents large market series from triggering unrelated application re-renders.
 
-## State policy
+## DOM rules
 
-Global state is reserved for information shared across routes, such as API availability and a selected run identifier. A strategy form draft, fetched OHLCV array, or chart instance stays local to the owning page until a demonstrated cross-route need exists.
+- Dynamic API values are assigned through `textContent`.
+- User/provider values are not interpolated into `innerHTML`.
+- Components return an element or `{ element, update }` object.
+- Route pages may return `{ element, destroy }` for cleanup.
+- API paths are constructed by services, not pages.
+- Chart-specific SVG creation stays under `charts/`.
 
-## Rendering and security
-
-- dynamic server values should be assigned with `textContent`;
-- `innerHTML` is limited to trusted static templates;
-- API errors become visible UI states rather than silent console failures;
-- every async page task must tolerate the page being destroyed before completion;
-- buttons expose disabled/loading states during requests.
-
-## Future chart integration
-
-Each vendor receives one adapter module. For example:
+## Current Market Data components
 
 ```text
-Backtest page → equity-curve-chart.js → ECharts
-Backtest page → candlestick-chart.js → Lightweight Charts
+MarketDataPage
+├── symbol/date/provider controls
+├── activity banner
+├── metric cards
+├── PricePreviewChart (native SVG)
+├── source metadata list
+├── DataQualityList
+├── provider capability cards
+└── MarketDataTable
 ```
 
-Pages receive stable methods such as `render`, `resize`, and `destroy`, not the full third-party API.
+## Why native SVG in Phase 1
+
+The first preview intentionally avoids a chart framework. It practices:
+
+- SVG namespaces;
+- coordinate scaling;
+- path/polyline construction;
+- responsive `viewBox` behavior;
+- accessible chart labeling;
+- keeping drawing code out of page event handlers.
+
+A later financial chart library can replace the adapter without changing the page's API response handling.

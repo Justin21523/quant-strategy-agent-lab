@@ -1,18 +1,31 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -Eeuo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-cd "$ROOT_DIR"
+cd "${ROOT_DIR}"
 
 if [[ ! -x .venv/bin/python || ! -d frontend/node_modules ]]; then
-  echo "Dependencies are missing. Run ./scripts/bootstrap.sh first." >&2
+  echo 'Dependencies are missing. Run make bootstrap first.' >&2
   exit 1
 fi
 
-.venv/bin/python -m ruff check backend
+printf '\n[1/6] Python lint and format\n'
+.venv/bin/ruff check backend scripts --config backend/pyproject.toml
+.venv/bin/ruff format --check backend scripts --config backend/pyproject.toml
+
+printf '\n[2/6] Backend tests and coverage\n'
+(cd backend && ../.venv/bin/python -m pytest)
+
+printf '\n[3/6] Frontend lint\n'
 npm --prefix frontend run lint
-.venv/bin/python -m pytest backend/tests
-npm --prefix frontend test
+
+printf '\n[4/6] Frontend format check\n'
+npm --prefix frontend run format:check
+
+printf '\n[5/6] Frontend unit tests\n'
+npm --prefix frontend run test
+
+printf '\n[6/6] Frontend production build\n'
 npm --prefix frontend run build
 
-echo "All Phase 0 checks passed."
+printf '\nAll Phase 1 checks passed.\n'

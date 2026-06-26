@@ -1,80 +1,252 @@
-# Architecture
+# Architecture — Phase 1
 
-## 1. Phase 0 runtime architecture
+## 1. Runtime topology
 
 ```mermaid
 flowchart LR
-    Browser[Browser] -->|ES modules| Vite[Vite dev server :5173]
-    Browser -->|/api/v1/* via proxy| FastAPI[FastAPI :8000]
-    FastAPI --> OpenAPI[OpenAPI / Swagger]
-    FastAPI --> Settings[Pydantic settings]
+    Browser[Browser] -->|ES modules| Vite[Vite :5173]
+    Browser -->|/api/v1 via proxy| FastAPI[FastAPI :8000]
+    FastAPI --> Service[MarketDataService]
+    Service --> Normalizer[MarketDataNormalizer]
+    Service --> CSV[CsvMarketDataProvider]
+    Service --> YF[YFinanceMarketDataProvider]
+    Service --> FM[FinMindMarketDataProvider reserved]
+    Normalizer --> Repo[MarketDataRepository]
+    Repo --> SQLite[(SQLite)]
+    FastAPI --> OpenAPI[Swagger / ReDoc]
 ```
 
-The frontend development server proxies `/api` to FastAPI. That keeps browser requests same-origin during development while preserving a versioned backend contract.
+In production containers, Nginx serves the frontend and proxies `/api` to the backend service.
 
-## 2. Frontend dependency direction
-
-```mermaid
-flowchart TD
-    Main[main.js] --> App[app.js]
-    App --> Router[core/router.js]
-    App --> Store[core/store.js]
-    App --> Layout[layouts]
-    Router --> Pages[pages]
-    Pages --> Components[components]
-    Pages --> Services[services]
-    Services --> API[core/api-client.js]
-```
-
-Allowed direction:
+## 2. Backend dependency direction
 
 ```text
-main → app → core/layout/routes → pages → components/services → API client
+main / lifespan
+  → API routes and dependencies
+    → Pydantic schemas
+    → application service
+      → provider protocol + provider adapters
+      → normalizer
+      → repository
+        → SQLite
 ```
 
-Forbidden examples:
+Rules:
 
-- `core/` importing a page;
-- a service manipulating DOM elements;
-- a page embedding raw API URL construction;
-- a chart library leaking throughout page code.
+- API routes may translate HTTP parameters and domain objects, but do not fetch or normalize data themselves.
+- Provider adapters may understand provider payloads, but do not write to SQLite.
+- Only the normalizer creates persistent `MarketBar` values.
+- The service owns fallback order, use-case validation, audit outcomes, and response-level warnings.
+- The repository owns SQL and row mapping; it does not call external providers.
 
-## 3. Backend dependency direction
+## 3. Market-data domain
 
 ```mermaid
-flowchart TD
-    Main[app/main.py] --> Router[api/router.py]
-    Router --> Routes[api/routes]
-    Routes --> Schemas[schemas]
-    Routes -. future .-> Services[services]
-    Services -. future .-> Repositories[repositories]
-    Repositories -. future .-> Database[(SQLite / DuckDB / files)]
+classDiagram
+    class MarketSymbol {
+      symbol
+      market
+      exchange
+      currency
+      timezone
+      supported_providers
+    }
+    class SourceBar {
+      trade_date
+      open
+      high
+      low
+      close
+      adjusted_close
+      volume
+    }
+    class ProviderFetchResult {
+      provider
+      dataset
+      is_adjusted
+      is_fixture_data
+      warnings
+    }
+    class MarketBar {
+      symbol
+      interval
+      trade_date
+      OHLCV
+      provider
+      dataset
+      retrieved_at
+    }
+    class DataQualityWarning {
+      code
+      severity
+      affected_rows
+      context
+    }
+
+    MarketSymbol --> ProviderFetchResult
+    SourceBar --> ProviderFetchResult
+    ProviderFetchResult --> MarketBar : normalized into
+    ProviderFetchResult --> DataQualityWarning
 ```
 
-Phase 0 has only metadata endpoints. Future financial logic will not be placed in route handlers.
+`SourceBar` is deliberately permissive because external data may be missing or malformed. `MarketBar` is strict and can only exist after validation.
 
-## 4. Future quantitative pipeline
+## 4. Provider abstraction
+
+All adapters implement the same conceptual contract:
+
+```python
+class MarketDataProvider(Protocol):
+    name: ProviderName
+
+    def list_symbols(self) -> tuple[MarketSymbol, ...]: ...
+
+    def fetch_ohlcv(
+        self,
+        symbol: MarketSymbol,
+        start: date | None = None,
+        end: date | None = None,
+    ) -> ProviderFetchResult: ...
+```
+
+Phase 1 adapters:
+
+| Adapter | State | Role |
+|---|---|---|
+| CSV | implemented | deterministic offline fixture and fallback |
+| yfinance | implemented | optional daily public-history synchronization |
+| FinMind | reserved | preserves a clean future Taiwan-market boundary |
+
+## 5. Normalization invariants
+
+A row is persisted only when:
+
+- date is within the requested range;
+- open, high, low, close, and adjusted close are finite and positive;
+- `high >= max(open, low, close)`;
+- `low <= min(open, high, close)`;
+- volume is finite and non-negative;
+- duplicate dates have been reduced to one row;
+- rows are sorted in ascending trading-date order.
+
+Invalid and duplicate counts become typed `DataQualityWarning` values. If no valid rows remain, normalization fails instead of returning a deceptive empty success.
+
+## 6. SQLite model
 
 ```mermaid
-flowchart LR
-    Input[Template or natural language] --> Parser[Parser]
-    Parser --> DSL[Validated Strategy DSL]
-    DSL --> Indicators[Indicator engine]
-    Indicators --> Signals[Signal engine]
-    Signals --> Backtest[Backtest engine]
-    Backtest --> Metrics[Performance analyzer]
-    Metrics --> Explain[Risk explainer]
-    Explain --> Report[Research report]
+erDiagram
+    SYMBOLS ||--o{ OHLCV_BARS : has
+    SYMBOLS ||--o{ MARKET_SYNC_RUNS : audited_by
+
+    SYMBOLS {
+      text symbol PK
+      text name
+      text market
+      text asset_type
+      text exchange
+      text currency
+      text timezone
+      text default_provider
+      text supported_providers_json
+      integer is_demo
+      text updated_at
+    }
+
+    OHLCV_BARS {
+      text symbol PK,FK
+      text interval PK
+      text trade_date PK
+      real open
+      real high
+      real low
+      real close
+      real adjusted_close
+      integer volume
+      text provider
+      text dataset
+      text source_timezone
+      text currency
+      integer is_adjusted
+      integer is_fixture_data
+      text retrieved_at
+    }
+
+    MARKET_SYNC_RUNS {
+      text run_id PK
+      text symbol PK,FK
+      text requested_provider
+      text provider_used
+      text status
+      integer bars_received
+      integer bars_stored
+      integer fallback_used
+      text warnings_json
+      text attempts_json
+      text error
+      text created_at
+    }
 ```
 
-## 5. State ownership
+The bar primary key is `(symbol, interval, trade_date)`. External synchronization uses upsert semantics, so a newer provider row replaces the prior row for that date. Startup fixture import uses insert-if-missing semantics, so restarting the application does not overwrite synchronized rows with synthetic data.
 
-The frontend store is for small cross-page application state, such as backend availability and the current draft strategy identifier. Large market series, chart instances, and transient form values should remain local to their owning page or component.
+## 7. Read and synchronization flows
 
-## 6. Error model
+### Cached read
 
-The API client converts network, timeout, and non-success HTTP responses into an `ApiError`. Pages decide how to render the error. Later backend phases will introduce a common error schema with a stable error code, human-readable message, details, and request identifier.
+```mermaid
+sequenceDiagram
+    Browser->>FastAPI: GET /market/ohlcv
+    FastAPI->>Service: get_series(symbol, range)
+    Service->>Repository: get_symbol + get_symbol_summary + get_bars
+    Repository-->>Service: full-cache metadata + ordered MarketBar values
+    Service->>Service: compute provenance and warnings
+    Service-->>FastAPI: MarketSeries
+    FastAPI-->>Browser: typed OHLCVResponse
+```
 
-## 7. Versioning
+### Provider synchronization
 
-All application endpoints begin under `/api/v1`. Static metadata stays at `/`, `/docs`, `/redoc`, and `/openapi.json`.
+```mermaid
+sequenceDiagram
+    Browser->>FastAPI: POST /market/sync
+    FastAPI->>Service: sync(symbols, provider, range)
+    Service->>Provider: fetch_ohlcv
+    alt provider succeeds
+      Provider-->>Service: ProviderFetchResult
+    else provider fails and fallback allowed
+      Service->>CSV: fetch_ohlcv
+      CSV-->>Service: fixture ProviderFetchResult
+    end
+    Service->>Normalizer: normalize
+    Normalizer-->>Service: strict MarketBar values + warnings
+    Service->>Repository: upsert bars + record audit
+    Repository-->>Service: stored count
+    Service-->>Browser: attempts, provider used, fallback, warnings
+```
+
+## 8. Frontend dependency direction
+
+```text
+main → app → router/layout/store
+             ↓
+           pages
+        ↙         ↘
+ components      services
+     ↓              ↓
+ chart adapter   API client
+```
+
+The Market Data page owns transient controls and loaded series. The global store remains limited to application-shell state such as route and backend availability. The chart is an adapter with `element` and `update()` rather than inline SVG logic scattered through the page.
+
+## 9. Failure behavior
+
+- Network provider failure does not corrupt the existing cache.
+- Fallback occurs only when the request enables it, and is explicit in the sync response and audit table.
+- A failed symbol does not abort the remaining symbols in a batch.
+- Unsupported symbols and invalid ranges produce typed errors.
+- Cached read endpoints never silently call the network.
+- Fixture data is always labeled in both storage and API output.
+
+## 10. Phase boundaries
+
+Phase 1 provides validated daily OHLCV only. Phase 2 consumes `MarketBar` values to calculate indicators. Provider-specific DataFrames must not leak into the indicator engine.

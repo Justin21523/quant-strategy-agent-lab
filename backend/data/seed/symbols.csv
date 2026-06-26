@@ -1,0 +1,4 @@
+symbol,name,market,asset_type,exchange,currency,timezone,filename,is_fixture_data,is_adjusted,dataset,source_note
+AAPL,Apple Inc.,US,equity,NASDAQ,USD,America/New_York,AAPL.csv,true,false,qsal-synthetic-offline-v1,Deterministic synthetic weekday OHLCV generated locally; not observed market data.
+SPY,SPDR S&P 500 ETF Trust,US,etf,NYSE Arca,USD,America/New_York,SPY.csv,true,false,qsal-synthetic-offline-v1,Deterministic synthetic weekday OHLCV generated locally; not observed market data.
+QQQ,Invesco QQQ Trust,US,etf,NASDAQ,USD,America/New_York,QQQ.csv,true,false,qsal-synthetic-offline-v1,Deterministic synthetic weekday OHLCV generated locally; not observed market data.

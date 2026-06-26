@@ -1,6 +1,6 @@
 export function createPlaceholderPage({ title, description, phase }) {
-  const element = document.createElement('section');
-  element.className = 'page placeholder-page';
+  const element = document.createElement("section");
+  element.className = "page placeholder-page";
   element.innerHTML = `
     <div class="placeholder-panel">
       <p class="eyebrow">${phase}</p>

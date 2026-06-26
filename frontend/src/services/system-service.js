@@ -1,8 +1,8 @@
 export const systemService = {
   getHealth(apiClient) {
-    return apiClient.get('/health');
+    return apiClient.get("/health");
   },
   getInfo(apiClient) {
-    return apiClient.get('/system/info');
+    return apiClient.get("/system/info");
   },
 };

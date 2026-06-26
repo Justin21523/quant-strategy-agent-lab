@@ -1,44 +1,46 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -Eeuo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-cd "$ROOT_DIR"
+cd "${ROOT_DIR}"
 
-command -v python3 >/dev/null 2>&1 || { echo "python3 is required" >&2; exit 1; }
-command -v node >/dev/null 2>&1 || { echo "Node.js is required" >&2; exit 1; }
-command -v npm >/dev/null 2>&1 || { echo "npm is required" >&2; exit 1; }
+command -v node >/dev/null 2>&1 || { echo 'Node.js is required.' >&2; exit 1; }
+command -v npm >/dev/null 2>&1 || { echo 'npm is required.' >&2; exit 1; }
 
-python3 - <<'PY_CHECK'
-import sys
-minimum = (3, 11)
-if sys.version_info < minimum:
-    raise SystemExit(
-        f"Python {minimum[0]}.{minimum[1]}+ is required; found {sys.version.split()[0]}"
-    )
-print(f"Python: {sys.version.split()[0]}")
-PY_CHECK
+PYTHON_BIN="${PYTHON:-}"
+if [[ -z "${PYTHON_BIN}" ]]; then
+  for candidate in python3.12 python3.11 python3; do
+    if command -v "${candidate}" >/dev/null 2>&1 \
+      && "${candidate}" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 11) else 1)'; then
+      PYTHON_BIN="${candidate}"
+      break
+    fi
+  done
+fi
 
-node - <<'JS_CHECK'
-const [major, minor] = process.versions.node.split('.').map(Number);
-const supported = (major === 20 && minor >= 19) || (major === 22 && minor >= 12) || major > 22;
-if (!supported) {
-  console.error(`Node.js 20.19+, 22.12+, or newer is required; found ${process.versions.node}`);
-  process.exit(1);
-}
-console.log(`Node.js: ${process.versions.node}`);
-JS_CHECK
+if [[ -z "${PYTHON_BIN}" ]] || ! command -v "${PYTHON_BIN}" >/dev/null 2>&1; then
+  echo 'Python 3.11+ is required.' >&2
+  exit 1
+fi
+
+"${PYTHON_BIN}" -c 'import sys; assert sys.version_info >= (3, 11), "Python 3.11+ is required"'
+node -e 'const [M,m]=process.versions.node.split(".").map(Number); if(!((M===20&&m>=19)||(M===22&&m>=12)||M>22)){throw new Error("Use Node 20.19+, 22.12+, or newer")}'
 
 if [[ ! -d .venv ]]; then
-  python3 -m venv .venv
+  "${PYTHON_BIN}" -m venv .venv
 fi
 
 .venv/bin/python -m pip install --upgrade pip
 .venv/bin/python -m pip install -r backend/requirements-dev.txt
-npm --prefix frontend ci
 
-if [[ ! -f .env ]]; then
-  cp .env.example .env
-  echo "Created .env from .env.example"
+if [[ ! -f backend/.env ]]; then
+  cp backend/.env.example backend/.env
 fi
 
-printf '\nBootstrap complete. Run ./scripts/dev.sh\n'
+npm --prefix frontend ci \
+  --registry "${NPM_CONFIG_REGISTRY:-https://registry.npmjs.org/}" \
+  --replace-registry-host=always \
+  --no-audit \
+  --no-fund
+
+printf '\nBootstrap complete. Run: make dev\n'

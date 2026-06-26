@@ -1,41 +1,144 @@
-# Data Pipeline Design
+# Market Data Pipeline
 
-## Status
+## Purpose
 
-Phase 1 will implement this pipeline. Phase 0 defines the contract and quality questions.
+The Phase 1 pipeline makes data origin, transformation, and limitations visible before any strategy is evaluated.
 
-## Flow
-
-```mermaid
-flowchart LR
-    Provider[Provider or local CSV] --> Raw[Immutable raw response]
-    Raw --> Normalize[Schema and type normalization]
-    Normalize --> Validate[Ordering, duplicates, gaps, values]
-    Validate --> Cache[Normalized local cache]
-    Cache --> API[Versioned market API]
-    API --> Indicators[Indicator engine]
+```text
+Provider adapter
+→ provider-neutral SourceBar values
+→ date and numeric validation
+→ OHLC consistency validation
+→ sort and de-duplicate
+→ strict MarketBar values
+→ SQLite cache and sync audit
+→ versioned API response
+→ frontend provenance and warning panels
 ```
 
-## Separation of concerns
+## Providers
 
-- **Raw:** provider-shaped response retained for debugging and provenance.
-- **Normalized:** canonical date/time, numeric types, names, and ordering.
-- **Validated:** warnings and fatal errors attached without silently altering meaning.
-- **Derived:** indicators, returns, signals, and metrics stored separately from prices.
+### CSV fixture provider
 
-## Minimum provenance metadata
+- Manifest: `backend/data/seed/symbols.csv`
+- Bars: one CSV per symbol
+- Assets: AAPL, SPY, QQQ
+- Range: 2023-01-03 through 2025-12-31
+- Rows: 782 per symbol
+- Nature: deterministic synthetic weekday data
+- Adjustment policy: raw synthetic OHLC with a separate synthetic adjusted-close field
 
-- provider and dataset name;
-- fetch timestamp;
-- requested and effective range;
-- symbol and market;
-- timezone and timeframe;
-- adjusted/unadjusted status;
-- row count;
-- checksum or cache key;
-- normalization version;
-- warnings.
+The fixture intentionally does not model exchange holidays and is not suitable for financial conclusions. Its purpose is deterministic engineering, automated testing, and offline demos.
 
-## Offline-first demo rule
+### yfinance provider
 
-A deterministic bundled CSV dataset will be the first provider implementation. Network providers will implement the same interface. This prevents an interview demo from becoming a live API outage simulator—a genre nobody asked for.
+- accepts explicit inclusive start/end dates from the application;
+- converts the application end date to the provider's exclusive end boundary;
+- requests daily raw OHLC plus adjusted close;
+- disables progress output and threading for predictable server execution;
+- converts provider columns and timestamps into `SourceBar` values;
+- wraps retrieval and data-shape failures as domain errors.
+
+The adapter does not make yfinance an authoritative feed. Responses retain provider attribution and a personal-research notice.
+
+### FinMind provider
+
+The class, configuration token, enum, provider status, and failure contract exist, but data synchronization is intentionally not implemented in Phase 1. This prevents Taiwan-market code from being faked merely to tick a roadmap box.
+
+## Normalization
+
+The normalizer performs:
+
+1. requested-range filtering;
+2. finite-number checks;
+3. positive-price checks;
+4. OHLC envelope checks;
+5. non-negative-volume checks;
+6. duplicate-date reduction, keeping the final row;
+7. ascending date ordering;
+8. provider and dataset enrichment;
+9. fixture, adjustment, timezone, currency, and retrieval metadata attachment.
+
+Warnings are data, not log-only text. They cross the API boundary as stable codes with severity, message, affected row count, and optional context.
+
+## Cache behavior
+
+### Startup
+
+1. create SQLite tables and indexes if absent;
+2. upsert the CSV symbol catalog;
+3. normalize fixture CSVs;
+4. insert fixture bars only when the `(symbol, interval, date)` key is missing.
+
+This preserves real synchronized rows across application restarts.
+
+### External synchronization
+
+1. validate the requested range;
+2. resolve each catalog symbol independently;
+3. choose provider sequence;
+4. fetch and normalize;
+5. upsert bars by `(symbol, interval, trade_date)`;
+6. record one audit row per symbol with attempts, warnings, provider used, counts, and error;
+7. return aggregate success, partial, or failed status.
+
+## Provider selection
+
+| Request | Attempt sequence when fallback is enabled |
+|---|---|
+| `auto` | yfinance → CSV |
+| `yfinance` | yfinance → CSV |
+| `finmind` | FinMind reserved adapter → CSV |
+| `csv` | CSV |
+
+When fallback is disabled, only the requested provider is attempted. For `auto`, the primary provider is yfinance; CSV is not attempted unless the fallback flag is enabled.
+
+## Provenance fields
+
+Every cached bar records:
+
+```text
+symbol
+interval
+trade_date
+provider
+dataset
+source_timezone
+currency
+is_adjusted
+is_fixture_data
+retrieved_at
+```
+
+Every OHLCV response summarizes:
+
+```text
+providers and datasets present
+effective and requested ranges
+source timezone and currency
+adjustment policy
+latest retrieval timestamp
+whether fixture rows are present
+quality warnings
+```
+
+## Data-quality warning catalog
+
+| Warning | Severity | Trigger |
+|---|---|---|
+| `provider_notice` | info | source-specific notice |
+| `synthetic_fixture_data` | info | cached response includes fixture rows |
+| `duplicate_dates_removed` | warning | duplicate source dates |
+| `invalid_rows_removed` | warning | invalid price/volume envelope |
+| `requested_start_not_available` | warning | cache begins later than requested |
+| `requested_end_not_available` | warning | cache ends earlier than requested |
+| `mixed_sources` | info | one response includes multiple providers |
+| `provider_fallback_used` | warning | fallback provider completed the sync |
+
+## Reproducibility
+
+Fixtures are generated by `scripts/generate_demo_market_data.py` with deterministic formulas. Regeneration must produce the same CSV content for the same script version. A future production data snapshot should be versioned separately and must never be mislabeled as fixture data.
+
+## Phase 2 handoff
+
+The indicator engine receives ordered, strict bars from the repository/service boundary. It must not call yfinance, parse CSV, or understand provider column names. This keeps indicator tests deterministic and prevents data ingestion concerns from contaminating quantitative calculations.

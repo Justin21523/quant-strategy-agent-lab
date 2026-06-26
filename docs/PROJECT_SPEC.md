@@ -1,154 +1,77 @@
 # Project Specification
 
-## 1. Product name
+## Product statement
 
-**Quant Strategy Agent Lab — 量化策略回測與 AI Agent 實驗室**
+Quant Strategy Agent Lab is a local-first research workbench where a user defines a quantitative trading strategy through a template or natural language, the system converts it into a controlled Strategy JSON DSL, Python tools run historical simulations, and an explicit Agent workflow produces performance and risk reports.
 
-## 2. Product statement
+## Goals
 
-A local-first research workbench that converts a strategy template or natural-language description into a validated Strategy JSON DSL, then calculates indicators, generates signals, executes historical backtests, measures performance, explains risk, scans parameters, and exports a reproducible report.
+1. Demonstrate full-stack engineering without a frontend framework.
+2. Keep quantitative logic reproducible, testable, and server-authoritative.
+3. Make data lineage and Agent/tool execution inspectable rather than magical.
+4. Report return and risk together with assumptions and limitations.
+5. Grow incrementally from deterministic data/templates to natural-language strategy parsing.
 
-## 3. Product boundary
+## Non-goals
 
-This project is a research and engineering system, not an investment-advice product. It must never present a historical result as a promise, forecast certainty, or personalized recommendation.
-
-### Explicit non-goals
-
-- live order execution during the portfolio-project roadmap;
-- guaranteed price or return prediction;
+- live brokerage integration or order execution;
+- personalized investment advice;
+- guaranteed predictive performance;
 - arbitrary LLM-generated Python execution;
-- silently changing data, costs, or strategy assumptions;
-- optimizing only on one historical period and calling the result robust.
+- high-frequency or tick-level simulation in the initial roadmap;
+- presenting synthetic fixtures as observed market prices.
 
-## 4. Target users
-
-### Primary
-
-- a learner practicing HTML, CSS, modular Vanilla JavaScript, Python, APIs, and financial engineering;
-- a reviewer evaluating full-stack, quantitative, and AI-agent engineering skills.
-
-### Secondary
-
-- a researcher comparing transparent rule-based strategies on historical datasets.
-
-## 5. Core user journey
+## Core user journey
 
 ```text
-Choose symbol and date range
-        ↓
-Choose a template or enter natural language
-        ↓
-Inspect and validate Strategy JSON DSL
-        ↓
-Run a cost-aware historical backtest
-        ↓
-Inspect trades, equity, drawdown, and metrics
-        ↓
-Review the agent timeline and risk explanation
-        ↓
-Scan parameters or compare assets
-        ↓
-Export a reproducible research report
+Inspect symbol, provider, date range, adjustment, and data warnings
+→ choose a strategy template or enter natural language
+→ review validated Strategy JSON DSL
+→ configure capital, fee, slippage, and position rules
+→ run backtest
+→ inspect Agent timeline, signals, equity, drawdown, trades, and metrics
+→ read risk explanation
+→ export a reproducible report
 ```
 
-## 6. Functional modules
+## Cross-cutting research requirements
 
-| Module | Responsibility | First phase |
-|---|---|---:|
-| Application shell | Routing, state, navigation, status | 0 |
-| Market data | Ingestion, validation, cache, provenance | 1 |
-| Indicator engine | Tested indicator calculations | 2 |
-| Strategy templates | Safe strategy configuration | 3 |
-| Strategy DSL | Structure and validation | 3 |
-| Backtest engine | Signals, positions, costs, trades, equity | 4 |
-| Backtest UI | Interactive execution and charts | 5 |
-| Agent timeline | Observable workflow state | 6 |
-| Performance analyzer | Return and risk metrics | 7 |
-| Explanation engine | Rule-based, then local-LLM explanation | 8 |
-| Natural-language parser | Text to constrained DSL | 9 |
-| Parameter scanner | Sensitivity analysis, not magic optimization | 10 |
-| Multi-asset comparison | Generalization tests and ranking | 11 |
-| Report center | Reproducible exports | 12 |
-| Portfolio polish | Tests, screenshots, docs, deployment | 13 |
+Every future run must record:
 
-## 7. Phase 0 requirements
+- provider, dataset, retrieval timestamp, fixture status, and adjusted-price policy;
+- market, exchange, symbol, currency, timezone, timeframe, and effective date range;
+- initial capital, commission, slippage, and fill timing;
+- position sizing, cash, warm-up, and benchmark rules;
+- Strategy DSL, indicator, and engine versions;
+- generated warnings and report timestamp.
 
-### Goals
+## Phase 0 acceptance
 
-- establish clean frontend and backend module boundaries;
-- create a reproducible Linux development workflow;
-- expose a versioned health API and automatic API documentation;
-- provide real navigation and backend connectivity without pretending later features exist;
-- document decisions and quality gates.
+- Linux bootstrap works;
+- FastAPI and Vite run together;
+- versioned health/readiness/API docs work;
+- modular Vanilla JavaScript shell works;
+- lint, tests, formatting, and build pass;
+- explicit non-advisory disclaimer exists.
 
-### Deliverables
+## Phase 1 acceptance
 
-- `README.md`;
-- `docs/PROJECT_SPEC.md`;
-- `docs/ROADMAP.md`;
-- modular Vanilla JavaScript frontend skeleton;
-- FastAPI backend skeleton;
-- `.gitignore`, `.env.example`, `Makefile`, and scripts;
-- Python and JavaScript lint/test configuration;
-- Docker and Compose definitions.
+- provider-neutral source and persistent market-bar models exist;
+- AAPL, SPY, and QQQ work offline;
+- yfinance can be selected behind the same provider contract;
+- FinMind has an explicit reserved boundary rather than fake behavior;
+- dates, numbers, OHLC envelopes, duplicate rows, and ordering are validated;
+- normalized daily bars persist in SQLite with source metadata;
+- synchronization attempts and fallback are auditable;
+- Market Data APIs expose symbols, providers, cached OHLCV, sync, and warnings;
+- the Vanilla JS UI can select a symbol/range, sync, and inspect data/provenance;
+- API, unit, quality-gate, build, and runtime smoke tests pass.
 
-### Acceptance criteria
+## Security and integrity boundaries
 
-- `./scripts/bootstrap.sh` installs dependencies on a compatible Linux environment;
-- `./scripts/dev.sh` starts frontend and backend processes;
-- the frontend route shell works without a framework;
-- the frontend reports backend health through `/api/v1/health`;
-- Swagger UI is available at `/docs`;
-- `make check` runs lint, tests, and a frontend production build;
-- the README contains the educational-use and no-investment-advice disclaimer.
-
-## 8. Architectural constraints
-
-### Frontend
-
-- no React, Vue, Angular, Svelte, or similar application framework;
-- ES modules are mandatory;
-- pages may compose components and call services;
-- services may call the API client but may not import page modules;
-- chart libraries will be wrapped behind chart modules when introduced;
-- global state must be small and explicit.
-
-### Backend
-
-- API route handlers orchestrate input/output only;
-- domain calculations belong in services;
-- data access belongs in repositories;
-- Pydantic schemas define all public request and response contracts;
-- every quantitative formula receives deterministic tests;
-- source data and derived data remain distinguishable.
-
-### Agent safety
-
-- natural language is converted only into an allow-listed DSL;
-- DSL validation happens before any indicator or backtest work;
-- an LLM cannot import packages, access the file system, or execute generated code;
-- agent steps must expose status and useful failure detail.
-
-## 9. Data and backtest integrity requirements
-
-Later phases must record:
-
-- symbol, market, timeframe, and source;
-- requested and effective date ranges;
-- missing-value and corporate-action handling;
-- initial cash, commission, slippage, and position sizing;
-- strategy definition and parameter values;
-- execution assumptions and engine version;
-- benchmark definition;
-- full trade list and equity series;
-- warnings for insufficient observations or trades.
-
-## 10. Success criteria for the finished portfolio project
-
-- a reviewer can clone, bootstrap, and run the system from documented Linux commands;
-- one strategy can be traced from human input to validated DSL to every resulting trade;
-- performance output is reproducible and includes assumptions;
-- parameter results show sensitivity rather than only the best cell;
-- the frontend clearly separates facts, computed metrics, and generated explanations;
-- automated tests protect financial calculations and API contracts;
-- the project can be explained in a technical interview without hand-waving.
+- External text is never inserted as raw HTML.
+- External provider data is never trusted before normalization.
+- SQLite paths and CSV manifest paths are constrained by configuration/provider checks.
+- Provider errors do not erase prior cached data.
+- The future LLM layer may emit only a constrained DSL and prose; it may not execute generated Python.
+- Research disclaimers do not replace engineering controls: assumptions and provenance must remain machine-readable.

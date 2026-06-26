@@ -1,22 +1,24 @@
-export function createStore(initialState = {}) {
+export function createStore(initialState) {
   let state = structuredClone(initialState);
   const listeners = new Set();
 
-  function getState() {
-    return state;
-  }
-
-  function setState(updater) {
-    const nextState = typeof updater === 'function' ? updater(state) : { ...state, ...updater };
-    if (Object.is(nextState, state)) return;
-    state = nextState;
-    listeners.forEach((listener) => listener(state));
-  }
-
-  function subscribe(listener) {
-    listeners.add(listener);
-    return () => listeners.delete(listener);
-  }
-
-  return { getState, setState, subscribe };
+  return {
+    getState() {
+      return structuredClone(state);
+    },
+    setState(patch) {
+      const nextPatch = typeof patch === "function" ? patch(structuredClone(state)) : patch;
+      state = { ...state, ...nextPatch };
+      for (const listener of listeners) listener(structuredClone(state));
+    },
+    subscribe(listener) {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
+  };
 }
+
+export const store = createStore({
+  route: "/",
+  api: { status: "checking", message: "Checking FastAPI…", latencyMs: null },
+});

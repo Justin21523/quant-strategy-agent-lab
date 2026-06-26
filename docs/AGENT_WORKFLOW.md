@@ -1,64 +1,56 @@
 # Agent Workflow
 
-## Design goal
+> Status: workflow contract planned; the LLM parser arrives in Phase 9.
 
-The Agent is an observable orchestrator around deterministic tools—not a mysterious narrator that invents a profitable number.
+## Principle
 
-## Planned ordered steps
+The Agent coordinates deterministic tools. It does not become the calculation engine and does not execute arbitrary generated Python.
+
+```mermaid
+flowchart TD
+    Input[Template or natural language]
+    Parse[Strategy Parser]
+    DSL[Validated Strategy JSON DSL]
+    Data[Market Data Tool]
+    Indicators[Indicator Builder]
+    Signals[Signal Generator]
+    Backtest[Backtest Runner]
+    Metrics[Performance Analyzer]
+    Explain[Risk Explainer]
+    Report[Report Writer]
+
+    Input --> Parse --> DSL --> Data --> Indicators --> Signals --> Backtest --> Metrics --> Explain --> Report
+```
+
+## Planned step states
 
 ```text
-strategy_received
-strategy_parsed
-strategy_validated
-market_data_loaded
-indicators_computed
-signals_generated
-backtest_executed
-performance_analyzed
-risk_explained
-report_generated
+pending → running → success | warning | failed | cancelled
 ```
 
-## Step record
+## Planned events
 
-```json
-{
-  "step_key": "strategy_validated",
-  "status": "success",
-  "started_at": "2026-06-25T12:00:00Z",
-  "finished_at": "2026-06-25T12:00:00.120Z",
-  "summary": "Strategy DSL passed 14 validation checks.",
-  "details": {},
-  "warnings": []
-}
-```
+1. `strategy_received`
+2. `strategy_parsed`
+3. `strategy_validated`
+4. `market_data_loaded`
+5. `indicators_computed`
+6. `signals_generated`
+7. `backtest_executed`
+8. `performance_analyzed`
+9. `risk_explained`
+10. `report_generated`
 
-## Status model
+## Phase 1 contribution
 
-- `pending`
-- `running`
-- `success`
-- `warning`
-- `failed`
-- `cancelled`
+The future `market_data_loaded` event can already report:
 
-## Failure behavior
+- symbol and interval;
+- requested/effective ranges;
+- providers and datasets;
+- adjusted-price policy;
+- fixture status;
+- quality warnings;
+- cache retrieval time.
 
-A failed deterministic tool stops dependent steps. The UI identifies the exact failed step, preserves prior successful evidence, and never asks an LLM to conceal or reinterpret an execution error.
-
-## LLM boundaries
-
-An optional local LLM may:
-
-- map supported language to a draft DSL;
-- summarize already-computed metrics;
-- explain assumptions and observed failure modes;
-- produce report prose from structured evidence.
-
-It may not:
-
-- execute generated code;
-- modify historical data;
-- replace deterministic metric calculations;
-- claim causal certainty from correlation;
-- omit data-quality or sample-size warnings.
+This ensures Agent prose can cite concrete data assumptions instead of pretending the source is invisible.

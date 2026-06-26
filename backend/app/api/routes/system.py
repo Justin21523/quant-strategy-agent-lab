@@ -1,27 +1,62 @@
-"""System metadata endpoint used by the Phase 0 frontend."""
+from typing import Annotated
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
-from app.schemas.system import Capability, SystemInfoResponse
+from app.api.dependencies import get_market_data_service
+from app.schemas.system import Capability, MarketCacheStatsResponse, SystemInfoResponse
+from app.services.market_data_service import MarketDataService
 
 router = APIRouter(prefix="/system", tags=["system"])
 
 
-@router.get("/info", response_model=SystemInfoResponse, summary="Read project phase metadata")
-async def system_info() -> SystemInfoResponse:
+@router.get("/info", response_model=SystemInfoResponse, summary="Project phase capabilities")
+def system_info(
+    service: Annotated[MarketDataService, Depends(get_market_data_service)],
+) -> SystemInfoResponse:
+    stats = service.cache_stats()
     return SystemInfoResponse(
-        phase="0",
-        phase_name="Foundation",
-        description=(
-            "Runnable frontend and backend skeleton with module boundaries, documentation, "
-            "quality checks, and no fake quantitative results."
+        phase="1",
+        phase_name="Market Data Layer",
+        cache=MarketCacheStatsResponse(
+            symbols=stats.symbols,
+            bars=stats.bars,
+            sync_records=stats.sync_records,
         ),
         capabilities=[
-            Capability(key="frontend_shell", label="Modular frontend shell", status="ready"),
-            Capability(key="backend_api", label="FastAPI application", status="ready"),
-            Capability(key="openapi", label="OpenAPI documentation", status="ready"),
-            Capability(key="market_data", label="Market data layer", status="planned"),
-            Capability(key="backtesting", label="Backtest engine", status="planned"),
-            Capability(key="agent", label="Agent workflow", status="planned"),
+            Capability(
+                key="frontend_shell",
+                label="Modular Vanilla JavaScript shell",
+                status="ready",
+            ),
+            Capability(
+                key="market_catalog",
+                label="AAPL / SPY / QQQ symbol catalog",
+                status="ready",
+            ),
+            Capability(
+                key="sqlite_cache",
+                label="Normalized SQLite OHLCV cache",
+                status="ready",
+            ),
+            Capability(
+                key="csv_fallback",
+                label="Deterministic offline CSV fallback",
+                status="ready",
+            ),
+            Capability(
+                key="yfinance_sync",
+                label="Optional yfinance synchronization",
+                status="ready",
+            ),
+            Capability(
+                key="indicator_engine",
+                label="Technical indicator engine",
+                status="planned",
+            ),
+            Capability(
+                key="backtest_engine",
+                label="Backtest engine",
+                status="planned",
+            ),
         ],
     )
