@@ -60,7 +60,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             "name": resolved.project_name,
             "version": __version__,
             "environment": resolved.environment,
-            "phase": "phase-4",
+            "phase": "phase-5",
             "docs": "/docs",
             "health": f"{resolved.api_v1_prefix}/health",
             "market": f"{resolved.api_v1_prefix}/market/symbols",

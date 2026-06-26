@@ -17,8 +17,8 @@ def system_info(
 ) -> SystemInfoResponse:
     stats = market_service.cache_stats()
     return SystemInfoResponse(
-        phase="4",
-        phase_name="Backtest Engine MVP",
+        phase="5",
+        phase_name="Backtest Lab Frontend",
         cache=MarketCacheStatsResponse(
             symbols=stats.symbols,
             bars=stats.bars,
@@ -83,7 +83,7 @@ def system_info(
             ),
             Capability(
                 key="backtest_lab_ui",
-                label="Minimal Vanilla JS backtest runner",
+                label="Interactive Backtest Lab with candle markers",
                 status="ready",
             ),
         ],

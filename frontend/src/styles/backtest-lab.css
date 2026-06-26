@@ -114,3 +114,106 @@
     min-height: auto;
   }
 }
+
+/* Phase 5 Backtest Lab frontend additions */
+.backtest-layout--phase5 {
+  grid-template-columns: minmax(420px, 0.95fr) minmax(420px, 1.05fr);
+}
+
+.metric-grid--wide {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.backtest-chart-panel .chart-frame {
+  min-height: 440px;
+}
+
+.backtest-candlestick-chart {
+  display: block;
+  width: 100%;
+  min-height: 420px;
+}
+
+.backtest-candlestick-chart__grid {
+  stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.backtest-candle__wick,
+.backtest-candle__body {
+  transition: opacity 160ms ease;
+}
+
+.backtest-candle__wick[data-tone="up"],
+.backtest-candle__body[data-tone="up"] {
+  fill: rgba(98, 230, 200, 0.46);
+  stroke: rgba(98, 230, 200, 0.92);
+}
+
+.backtest-candle__wick[data-tone="down"],
+.backtest-candle__body[data-tone="down"] {
+  fill: rgba(255, 117, 143, 0.44);
+  stroke: rgba(255, 117, 143, 0.92);
+}
+
+.backtest-volume-bar {
+  opacity: 0.34;
+}
+
+.backtest-volume-bar[data-tone="up"] {
+  fill: var(--success);
+}
+
+.backtest-volume-bar[data-tone="down"] {
+  fill: var(--danger);
+}
+
+.backtest-overlay-line {
+  fill: none;
+  stroke-width: 1.8;
+  vector-effect: non-scaling-stroke;
+}
+
+.backtest-overlay-line--fast {
+  stroke: var(--info);
+}
+
+.backtest-overlay-line--slow {
+  stroke: var(--warning);
+}
+
+.backtest-trade-marker {
+  stroke: rgba(3, 7, 18, 0.82);
+  stroke-width: 1.2;
+  vector-effect: non-scaling-stroke;
+}
+
+.backtest-trade-marker[data-side="buy"] {
+  fill: var(--success);
+}
+
+.backtest-trade-marker[data-side="sell"] {
+  fill: var(--warning);
+}
+
+.backtest-line-chart__area {
+  fill: rgba(255, 117, 143, 0.14);
+}
+
+.backtest-line-chart__zero {
+  stroke: rgba(255, 255, 255, 0.18);
+  stroke-dasharray: 4 4;
+}
+
+@media (max-width: 1240px) {
+  .metric-grid--wide {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .metric-grid--wide {
+    grid-template-columns: 1fr;
+  }
+}

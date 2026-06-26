@@ -1,3 +1,4 @@
+import { createBacktestCandlestickChart } from "../charts/backtest-candlestick-chart.js";
 import { createBacktestLineChart } from "../charts/backtest-line-chart.js";
 import { createBacktestTradeTable } from "../components/backtest-trade-table.js";
 import { createMetricCard } from "../components/metric-card.js";
@@ -73,11 +74,14 @@ export function createBacktestLabPage() {
   const warningsList = createElement("ul", { className: "backtest-warning-list" });
   const preview = createStrategyJsonPreview();
   const tradeTable = createBacktestTradeTable();
+  const candlestickChart = createBacktestCandlestickChart();
   const equityChart = createBacktestLineChart({ label: "Equity curve", valueKey: "equity" });
   const drawdownChart = createBacktestLineChart({
     label: "Drawdown curve",
     valueKey: "drawdown_pct",
     formatter: formatPercent,
+    area: true,
+    zeroLine: true,
   });
 
   const activity = createElement("div", {
@@ -98,16 +102,16 @@ export function createBacktestLabPage() {
       createElement("header", {
         className: "page-header page-header--wide",
         children: [
-          createElement("span", { className: "eyebrow", text: "Phase 4 · Backtest Engine MVP" }),
-          createElement("h1", { text: "Run one validated strategy against one cached asset." }),
+          createElement("span", { className: "eyebrow", text: "Phase 5 · Backtest Lab Frontend" }),
+          createElement("h1", { text: "Interactive strategy backtest workbench." }),
           createElement("p", {
-            text: "This MVP executes deterministic long-only Strategy JSON DSL with next-open fills, fees, slippage, trade ledger, equity curve, drawdown, and Agent-style execution steps.",
+            text: "Choose a cached asset, render a Strategy JSON template, run the deterministic engine, then inspect candles, buy/sell markers, equity, drawdown, metrics, trades, warnings, and execution steps.",
           }),
         ],
       }),
       activity,
       createElement("div", {
-        className: "backtest-layout",
+        className: "backtest-layout backtest-layout--phase5",
         children: [
           createElement("article", {
             className: "panel backtest-control-panel",
@@ -121,7 +125,7 @@ export function createBacktestLabPage() {
                       createElement("h2", { text: "Template + execution assumptions" }),
                     ],
                   }),
-                  createElement("span", { className: "phase-chip", text: "MVP engine" }),
+                  createElement("span", { className: "phase-chip", text: "Frontend lab" }),
                 ],
               }),
               createElement("div", {
@@ -162,6 +166,23 @@ export function createBacktestLabPage() {
         ],
       }),
       metricGrid,
+      createElement("article", {
+        className: "panel backtest-chart-panel",
+        children: [
+          createElement("div", {
+            className: "panel__header",
+            children: [
+              createElement("div", {
+                children: [
+                  createElement("span", { className: "eyebrow", text: "Price action" }),
+                  createElement("h2", { text: "Candles + SMA overlay + executed trades" }),
+                ],
+              }),
+            ],
+          }),
+          candlestickChart.element,
+        ],
+      }),
       createElement("div", {
         className: "content-grid content-grid--two",
         children: [
@@ -262,7 +283,7 @@ export function createBacktestLabPage() {
         children: [
           createElement("strong", { text: "Backtest boundary" }),
           createElement("p", {
-            text: "Phase 4 is a deterministic research backtest engine. Historical backtests do not guarantee future performance and this project does not provide investment advice.",
+            text: "Phase 5 improves the research UI around the deterministic backtest engine. Historical backtests do not guarantee future performance and this project does not provide investment advice.",
           }),
         ],
       }),
@@ -442,12 +463,35 @@ export function createBacktestLabPage() {
       const strategyJson = await refreshStrategyPreview();
       const result = await backtestService.run(strategyJson);
       if (destroyed) return;
+      let overlayBars = [];
+      let warnings = result.warnings ?? [];
+
+      try {
+        const overlay = await marketService.getOhlcv({
+          symbol: result.symbol,
+          start: result.data.start,
+          end: result.data.end,
+          includeIndicators: true,
+        });
+        overlayBars = overlay.bars ?? [];
+      } catch (error) {
+        warnings = [
+          ...warnings,
+          {
+            code: "frontend_market_overlay_unavailable",
+            severity: "warning",
+            message: apiMessage(error),
+          },
+        ];
+      }
+
+      candlestickChart.update({ bars: overlayBars, trades: result.trades });
       updateMetrics(result.metrics);
       equityChart.update(result.equity_curve);
       drawdownChart.update(result.drawdown_curve);
       tradeTable.update(result.trades);
       updateSteps(result.agent_steps);
-      updateWarnings(result.warnings);
+      updateWarnings(warnings);
       setActivity(
         "success",
         `${result.strategy_name}: ${result.metrics.trade_count} trade(s), ${formatPercent(result.metrics.total_return_pct)} total return.`,
@@ -506,7 +550,7 @@ export function createBacktestLabPage() {
       await refreshStrategyPreview();
       updateSteps();
       updateWarnings();
-      setActivity("success", "Ready to run a Phase 4 deterministic backtest.");
+      setActivity("success", "Ready to run an interactive Phase 5 backtest workflow.");
     } catch (error) {
       if (!destroyed) setActivity("error", apiMessage(error));
     } finally {

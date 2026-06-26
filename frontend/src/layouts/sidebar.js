@@ -4,7 +4,7 @@ const navigation = [
   ["/", "Overview", "00"],
   ["/market-data", "Market + Indicators", "02"],
   ["/strategy-builder", "Strategy Builder", "03"],
-  ["/backtest-lab", "Backtest Lab", "04"],
+  ["/backtest-lab", "Backtest Lab", "05"],
   ["/performance-report", "Performance", "07"],
   ["/parameter-scanner", "Parameter Scan", "10"],
   ["/comparison", "Comparison", "11"],

@@ -5,8 +5,8 @@ def test_root_metadata(client: TestClient) -> None:
     response = client.get("/")
     assert response.status_code == 200
     body = response.json()
-    assert body["phase"] == "phase-4"
-    assert body["version"] == "0.5.0"
+    assert body["phase"] == "phase-5"
+    assert body["version"] == "0.6.0"
     assert body["docs"] == "/docs"
     assert body["market"] == "/api/v1/market/symbols"
     assert body["indicators"] == "/api/v1/indicators/catalog"
@@ -18,8 +18,8 @@ def test_root_metadata(client: TestClient) -> None:
 def test_health_and_readiness(client: TestClient) -> None:
     health = client.get("/api/v1/health")
     assert health.status_code == 200
-    assert health.json()["phase"] == "phase-4"
-    assert health.json()["version"] == "0.5.0"
+    assert health.json()["phase"] == "phase-5"
+    assert health.json()["version"] == "0.6.0"
 
     readiness = client.get("/api/v1/ready")
     assert readiness.status_code == 200
@@ -44,7 +44,7 @@ def test_openapi_and_system_info(client: TestClient) -> None:
 
     info = client.get("/api/v1/system/info")
     assert info.status_code == 200
-    assert info.json()["phase_name"] == "Backtest Engine MVP"
+    assert info.json()["phase_name"] == "Backtest Lab Frontend"
     body = info.json()
     assert any(item["key"] == "sqlite_cache" for item in body["capabilities"])
     assert any(

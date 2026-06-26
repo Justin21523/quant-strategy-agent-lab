@@ -1,6 +1,6 @@
 [project]
 name = "quant-strategy-agent-lab-api"
-version = "0.5.0"
+version = "0.6.0"
 description = "FastAPI backend for Quant Strategy Agent Lab"
 requires-python = ">=3.11"
 

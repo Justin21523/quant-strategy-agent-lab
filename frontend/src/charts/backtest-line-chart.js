@@ -11,7 +11,13 @@ function svgElement(name, attributes = {}) {
   return element;
 }
 
-export function createBacktestLineChart({ label, valueKey, formatter = formatPrice }) {
+export function createBacktestLineChart({
+  label,
+  valueKey,
+  formatter = formatPrice,
+  area = false,
+  zeroLine = false,
+}) {
   const empty = createElement("p", {
     className: "chart-empty",
     text: `Run a backtest to inspect ${label}.`,
@@ -39,6 +45,8 @@ export function createBacktestLineChart({ label, valueKey, formatter = formatPri
     const yScale = (value) =>
       padding.top + ((maximum - value) / spread) * (height - padding.top - padding.bottom);
 
+    const baselineY = zeroLine && minimum <= 0 && maximum >= 0 ? yScale(0) : yScale(minimum);
+
     const svg = svgElement("svg", {
       class: "backtest-line-chart",
       viewBox: `0 0 ${width} ${height}`,
@@ -63,6 +71,23 @@ export function createBacktestLineChart({ label, valueKey, formatter = formatPri
     const linePoints = valid
       .map((point) => `${xScale(point.index).toFixed(2)},${yScale(point.value).toFixed(2)}`)
       .join(" ");
+    if (area) {
+      const areaPoints = `${linePoints} ${xScale(valid.at(-1).index).toFixed(2)},${baselineY.toFixed(2)} ${xScale(valid[0].index).toFixed(2)},${baselineY.toFixed(2)}`;
+      svg.append(svgElement("polygon", { points: areaPoints, class: "backtest-line-chart__area" }));
+    }
+
+    if (zeroLine && minimum <= 0 && maximum >= 0) {
+      svg.append(
+        svgElement("line", {
+          x1: padding.left,
+          x2: width - padding.right,
+          y1: baselineY,
+          y2: baselineY,
+          class: "backtest-line-chart__zero",
+        }),
+      );
+    }
+
     svg.append(svgElement("polyline", { points: linePoints, class: "backtest-line-chart__line" }));
 
     const maxLabel = svgElement("text", { x: 8, y: padding.top + 4, class: "chart-label" });

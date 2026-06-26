@@ -21,7 +21,7 @@ def health_check(
         service=settings.project_name,
         version=__version__,
         environment=settings.environment,
-        phase="phase-4",
+        phase="phase-5",
         timestamp=datetime.now(UTC),
     )
 
