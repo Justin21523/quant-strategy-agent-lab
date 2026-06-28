@@ -57,8 +57,6 @@ The project is implemented phase by phase so each layer has a clear contract bef
 - warnings and Agent-style execution steps;
 - minimal Vanilla JS Backtest Lab runner.
 
-## Next phases
-
 ### Phase 5 — Backtest Lab Frontend
 
 - candlestick chart with buy/sell markers;
@@ -75,13 +73,45 @@ The project is implemented phase by phase so each layer has a clear contract bef
 - failure-state UI;
 - backend step provenance for each run.
 
-### Phase 7 — Performance Analyzer
+### Phase 7A — Market Universe and Scanner Foundation
 
-- Sortino ratio;
-- Calmar ratio;
-- annualized volatility;
-- average win/loss;
-- return distribution;
+- US common-stock universe refresh from Nasdaq Trader symbol directory files;
+- cursor-based chunk synchronization for universe members;
+- saved scanner runs and ranked result snapshots;
+- Stock Scanner UI for cached-bar technical filtering.
+
+### Phase 8A — Scanner Operations and Multi-Asset Backtest
+
+- scanner presets and toggleable technical filters;
+- sortable scanner result metrics and saved-run reload;
+- skipped-symbol reason persistence;
+- batch-sync history, missing/stale sync, and failed-symbol retry;
+- universe data-quality report;
+- scanner-driven multi-asset backtest ranking.
+
+### Phase 9A — Portfolio Rebalance and Job Queue
+
+- weekly/monthly equal-weight portfolio rebalance simulation;
+- portfolio equity curve, turnover, holdings, skipped periods, and benchmark comparison;
+- Performance Analyzer expansion with CAGR, annual volatility, Sortino, Calmar, rolling drawdown, and monthly returns;
+- Scanner preset to Portfolio strategy workflow;
+- SQLite-backed job queue for batch sync, scanner, and portfolio jobs;
+- scanner and portfolio data-quality gates.
+
+### Phase 9B — In-App Research Demo Automation
+
+- 20-stock deterministic sample universe;
+- one-click research demo workflow from sync to performance report;
+- website auto-tour for Scanner, Jobs, Portfolio, Comparison, and Performance;
+- Playwright validation for the in-app demo.
+
+## Next phases
+
+### Phase 10 — Portfolio Analytics Polish
+
+- CSV/JSON exports;
+- larger-scale async controls;
+- richer benchmark and regime comparison;
 - metric explanations and tooltips.
 
 ### Phase 8 — Rule-based / AI Explanation
@@ -102,11 +132,11 @@ The project is implemented phase by phase so each layer has a clear contract bef
 - heatmap output;
 - strategy ranking table.
 
-### Phase 11 — Multi-Asset Comparison
+### Phase 11 — Multi-Asset Comparison Expansion
 
-- batch backtests;
-- multi-symbol ranking;
-- risk/return scatter.
+- risk/return scatter;
+- benchmark-relative comparison;
+- multi-run comparison history;
 
 ### Phase 12 — Report Center
 
@@ -138,15 +168,16 @@ gantt
     Phase 4 backtest engine       :done, p4, after p3, 1d
 
     section MVP Backtest UI
-    Phase 5 backtest lab frontend :active, p5, after p4, 1d
-    Phase 6 agent timeline        :p6, after p5, 1d
-    Phase 7 performance analyzer  :p7, after p6, 1d
+    Phase 5 backtest lab frontend :done, p5, after p4, 1d
+    Phase 6 agent timeline        :done, p6, after p5, 1d
+    Phase 7A scanner foundation   :done, p7a, after p6, 1d
+    Phase 8A scanner operations   :done, p8a, after p7a, 1d
+    Phase 9A portfolio rebalance  :done, p9a, after p8a, 1d
+    Phase 10 analytics polish     :active, p10a, after p9a, 1d
 
     section Advanced
-    Phase 8 AI explanation        :p8, after p7, 1d
-    Phase 9 NL strategy parser    :p9, after p8, 1d
-    Phase 10 parameter scanner    :p10, after p9, 1d
-    Phase 11 multi asset compare  :p11, after p10, 1d
-    Phase 12 report center        :p12, after p11, 1d
-    Phase 13 portfolio polish     :p13, after p12, 1d
+    Phase 11 AI explanation       :p11, after p10a, 1d
+    Phase 12 NL strategy parser   :p12, after p11, 1d
+    Phase 13 report center        :p13, after p12, 1d
+    Phase 14 portfolio polish     :p14, after p13, 1d
 ```

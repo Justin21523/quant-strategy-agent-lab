@@ -4,6 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 
 from app.api.dependencies import get_backtest_service
+from app.domain.agent_workflow import workflow_step_definition
 from app.domain.backtest import BacktestResult
 from app.schemas.backtests import (
     BacktestAgentStepResponse,
@@ -160,14 +161,7 @@ def _response(result: BacktestResult) -> BacktestRunResponse:
             for warning in result.warnings
         ],
         agent_steps=[
-            BacktestAgentStepResponse(
-                key=step.key,
-                label=step.key.replace("_", " ").title(),
-                status=step.status,
-                message=step.message,
-                detail=step.detail,
-            )
-            for step in result.agent_steps
+            _agent_step_response(index, step) for index, step in enumerate(result.agent_steps)
         ],
     )
 
@@ -178,3 +172,21 @@ def _signal_side(executed_order: str | None) -> str | None:
     if executed_order == "exit":
         return "sell"
     return None
+
+
+def _agent_step_response(index: int, step) -> BacktestAgentStepResponse:
+    definition = workflow_step_definition(step.key)
+    return BacktestAgentStepResponse(
+        sequence=definition.sequence if definition else index + 1,
+        key=step.key,
+        label=definition.label if definition else step.key.replace("_", " ").title(),
+        description=(
+            definition.description
+            if definition
+            else "Custom engine step returned by the backtest service."
+        ),
+        status=step.status,
+        message=step.message,
+        detail=step.detail,
+        duration_ms=None,
+    )

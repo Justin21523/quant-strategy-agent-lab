@@ -42,8 +42,11 @@ def test_backtest_engine_runs_ma_crossover_strategy(client: TestClient) -> None:
     assert body["trades"][0].get("legacy_trade_id", body["trades"][0]["trade_id"])
     assert body["trades"][0]["side"] == "long"
     assert body["signals"][0]["date"]
-    assert body["agent_steps"][0]["key"] == "validate_strategy"
+    assert body["agent_steps"][0]["key"] == "strategy_received"
+    assert body["agent_steps"][0]["sequence"] == 1
+    assert body["agent_steps"][0]["description"]
     assert any(step["key"] == "run_backtest" for step in body["agent_steps"])
+    assert body["agent_steps"][-1]["key"] == "risk_review"
     assert any(warning["code"] == "synthetic_fixture_data" for warning in body["warnings"])
 
 

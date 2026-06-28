@@ -1,6 +1,6 @@
 # Bundled synthetic market-data fixtures
 
-Phase 1 ships deterministic synthetic daily OHLCV for `AAPL`, `SPY`, and `QQQ` so the application can run and be tested without network access.
+Phase 1 ships deterministic synthetic daily OHLCV for `AAPL`, `SPY`, `QQQ`, and a 20-stock synthetic sample universe so the application can run and be tested without network access.
 
 - Date range: `2023-01-03` through `2025-12-31`.
 - Weekdays are generated; exchange holidays are not modeled.

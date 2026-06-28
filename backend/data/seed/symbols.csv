@@ -1,4 +1,23 @@
 symbol,name,market,asset_type,exchange,currency,timezone,filename,is_fixture_data,is_adjusted,dataset,source_note
 AAPL,Apple Inc.,US,equity,NASDAQ,USD,America/New_York,AAPL.csv,true,false,qsal-synthetic-offline-v1,Deterministic synthetic weekday OHLCV generated locally; not observed market data.
+ALFA,Alfa Systems Synthetic Common Stock,US,equity,NASDAQ,USD,America/New_York,ALFA.csv,true,false,qsal-synthetic-offline-v1,Deterministic synthetic weekday OHLCV generated locally; not observed market data.
+BRAV,Bravo Industrials Synthetic Common Stock,US,equity,NYSE,USD,America/New_York,BRAV.csv,true,false,qsal-synthetic-offline-v1,Deterministic synthetic weekday OHLCV generated locally; not observed market data.
+CHAR,Charlie Health Synthetic Common Stock,US,equity,NASDAQ,USD,America/New_York,CHAR.csv,true,false,qsal-synthetic-offline-v1,Deterministic synthetic weekday OHLCV generated locally; not observed market data.
+DELT,Delta Robotics Synthetic Common Stock,US,equity,NASDAQ,USD,America/New_York,DELT.csv,true,false,qsal-synthetic-offline-v1,Deterministic synthetic weekday OHLCV generated locally; not observed market data.
+ECHO,Echo Retail Synthetic Common Stock,US,equity,NYSE,USD,America/New_York,ECHO.csv,true,false,qsal-synthetic-offline-v1,Deterministic synthetic weekday OHLCV generated locally; not observed market data.
+FOXT,Foxtrot Software Synthetic Common Stock,US,equity,NASDAQ,USD,America/New_York,FOXT.csv,true,false,qsal-synthetic-offline-v1,Deterministic synthetic weekday OHLCV generated locally; not observed market data.
+GOLF,Golf Energy Synthetic Common Stock,US,equity,NYSE,USD,America/New_York,GOLF.csv,true,false,qsal-synthetic-offline-v1,Deterministic synthetic weekday OHLCV generated locally; not observed market data.
+HOTL,Hotel Cloud Synthetic Common Stock,US,equity,NASDAQ,USD,America/New_York,HOTL.csv,true,false,qsal-synthetic-offline-v1,Deterministic synthetic weekday OHLCV generated locally; not observed market data.
+INDI,India Payments Synthetic Common Stock,US,equity,NYSE,USD,America/New_York,INDI.csv,true,false,qsal-synthetic-offline-v1,Deterministic synthetic weekday OHLCV generated locally; not observed market data.
+JULI,Juliet Biotech Synthetic Common Stock,US,equity,NASDAQ,USD,America/New_York,JULI.csv,true,false,qsal-synthetic-offline-v1,Deterministic synthetic weekday OHLCV generated locally; not observed market data.
+KILO,Kilo Semiconductor Synthetic Common Stock,US,equity,NASDAQ,USD,America/New_York,KILO.csv,true,false,qsal-synthetic-offline-v1,Deterministic synthetic weekday OHLCV generated locally; not observed market data.
+LIMA,Lima Logistics Synthetic Common Stock,US,equity,NYSE,USD,America/New_York,LIMA.csv,true,false,qsal-synthetic-offline-v1,Deterministic synthetic weekday OHLCV generated locally; not observed market data.
+MIKE,Mike Materials Synthetic Common Stock,US,equity,NYSE,USD,America/New_York,MIKE.csv,true,false,qsal-synthetic-offline-v1,Deterministic synthetic weekday OHLCV generated locally; not observed market data.
+NOVA,Nova Networks Synthetic Common Stock,US,equity,NASDAQ,USD,America/New_York,NOVA.csv,true,false,qsal-synthetic-offline-v1,Deterministic synthetic weekday OHLCV generated locally; not observed market data.
+OSCR,Oscar Aerospace Synthetic Common Stock,US,equity,NYSE,USD,America/New_York,OSCR.csv,true,false,qsal-synthetic-offline-v1,Deterministic synthetic weekday OHLCV generated locally; not observed market data.
+PAPA,Papa Devices Synthetic Common Stock,US,equity,NASDAQ,USD,America/New_York,PAPA.csv,true,false,qsal-synthetic-offline-v1,Deterministic synthetic weekday OHLCV generated locally; not observed market data.
+QUEB,Quebec Finance Synthetic Common Stock,US,equity,NYSE,USD,America/New_York,QUEB.csv,true,false,qsal-synthetic-offline-v1,Deterministic synthetic weekday OHLCV generated locally; not observed market data.
+ROMO,Romeo Platforms Synthetic Common Stock,US,equity,NASDAQ,USD,America/New_York,ROMO.csv,true,false,qsal-synthetic-offline-v1,Deterministic synthetic weekday OHLCV generated locally; not observed market data.
+SIER,Sierra Consumer Synthetic Common Stock,US,equity,NYSE,USD,America/New_York,SIER.csv,true,false,qsal-synthetic-offline-v1,Deterministic synthetic weekday OHLCV generated locally; not observed market data.
 SPY,SPDR S&P 500 ETF Trust,US,etf,NYSE Arca,USD,America/New_York,SPY.csv,true,false,qsal-synthetic-offline-v1,Deterministic synthetic weekday OHLCV generated locally; not observed market data.
 QQQ,Invesco QQQ Trust,US,etf,NASDAQ,USD,America/New_York,QQQ.csv,true,false,qsal-synthetic-offline-v1,Deterministic synthetic weekday OHLCV generated locally; not observed market data.

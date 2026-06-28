@@ -48,28 +48,39 @@ export const routes = [
   },
   {
     path: "/parameter-scanner",
-    label: "Parameter Scanner",
-    eyebrow: "Phase 10",
+    label: "Scanner",
+    eyebrow: "Phase 7A",
     render: (context) =>
       createPlaceholderPage({
         ...context,
-        title: "Parameter Scanner",
-        description:
-          "Sensitivity analysis and heatmaps belong here—after the backtest engine is trustworthy.",
-        phase: "Phase 10",
+        title: "Stock Scanner",
+        description: "Universe-based technical scanning for cached market data belongs here.",
+        phase: "Phase 7A",
+      }),
+  },
+  {
+    path: "/data-quality",
+    label: "Data Quality",
+    eyebrow: "Phase 8A",
+    render: (context) =>
+      createPlaceholderPage({
+        ...context,
+        title: "Data Quality",
+        description: "Universe cache coverage, missing bars, and indicator readiness live here.",
+        phase: "Phase 8A",
       }),
   },
   {
     path: "/comparison",
     label: "Multi-Asset",
-    eyebrow: "Phase 11",
+    eyebrow: "Phase 8A",
     render: (context) =>
       createPlaceholderPage({
         ...context,
         title: "Multi-Asset Comparison",
         description:
           "Batch runs and risk-return comparisons will test whether a strategy generalizes.",
-        phase: "Phase 11",
+        phase: "Phase 8A",
       }),
   },
   {

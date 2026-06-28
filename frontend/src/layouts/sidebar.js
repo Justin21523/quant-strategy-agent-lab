@@ -1,14 +1,19 @@
 import { createElement } from "../core/dom.js";
 
 const navigation = [
-  ["/", "Overview", "00"],
+  ["/", "Demo", "9C"],
+  ["/research-lab", "Research Lab", "9E"],
   ["/market-data", "Market + Indicators", "02"],
   ["/strategy-builder", "Strategy Builder", "03"],
   ["/backtest-lab", "Backtest Lab", "05"],
+  ["/agent-workflow", "Agent Workflow", "06"],
   ["/performance-report", "Performance", "07"],
-  ["/parameter-scanner", "Parameter Scan", "10"],
-  ["/comparison", "Comparison", "11"],
-  ["/report-center", "Report Center", "12"],
+  ["/parameter-scanner", "Scanner", "7A"],
+  ["/data-quality", "Data Quality", "8A"],
+  ["/portfolio-rebalance", "Portfolio", "9A"],
+  ["/jobs", "Jobs", "9A"],
+  ["/comparison", "Comparison", "8A"],
+  ["/report-center", "Report Center", "9E"],
 ];
 
 export function createSidebar() {
@@ -26,6 +31,7 @@ export function createSidebar() {
 
   const element = createElement("aside", {
     className: "sidebar",
+    attributes: { "data-guide": "shell-sidebar" },
     children: [
       createElement("a", {
         className: "brand",

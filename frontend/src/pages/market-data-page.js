@@ -221,6 +221,7 @@ export function createMarketDataPage() {
       }),
       createElement("article", {
         className: "panel indicator-panel",
+        attributes: { "data-guide": "market-indicators" },
         children: [
           createElement("div", {
             className: "panel__header",

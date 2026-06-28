@@ -45,6 +45,12 @@
   background: rgba(4, 9, 16, 0.72);
 }
 
+textarea.form-control {
+  min-height: 118px;
+  font-family: var(--font-mono);
+  resize: vertical;
+}
+
 .form-control:disabled,
 .button:disabled {
   cursor: not-allowed;
@@ -293,6 +299,16 @@
 .data-table thead {
   color: var(--text-subtle);
   background: rgba(255, 255, 255, 0.025);
+}
+
+.table-sort-button {
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
 }
 
 .data-table tbody tr:hover {

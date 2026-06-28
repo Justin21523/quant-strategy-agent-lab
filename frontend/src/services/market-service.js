@@ -48,6 +48,40 @@ export function createMarketService(client = apiClient) {
         { timeoutMs: 20_000 },
       );
     },
+    batchSync({
+      universeId,
+      provider = "yfinance",
+      start,
+      end,
+      chunkSize = 50,
+      cursor = 0,
+      allowFallback = false,
+      mode = "all",
+      staleAfter,
+      failedRunId,
+    }) {
+      const payload = {
+        universe_id: universeId,
+        provider,
+        start,
+        end,
+        chunk_size: chunkSize,
+        cursor,
+        allow_fallback: allowFallback,
+      };
+      if (mode !== "all") payload.mode = mode;
+      if (staleAfter) payload.stale_after = staleAfter;
+      if (failedRunId) payload.failed_run_id = failedRunId;
+      return client.post(`${basePath}/batch-sync`, payload, { timeoutMs: 60_000 });
+    },
+    getBatchSyncRuns({ universeId, limit = 20 } = {}) {
+      const query = buildQuery({ universe_id: universeId, limit });
+      return client.get(`${basePath}/batch-sync/runs${query ? `?${query}` : ""}`);
+    },
+    getSyncRuns({ runId, limit = 100 } = {}) {
+      const query = buildQuery({ run_id: runId, limit });
+      return client.get(`${basePath}/sync-runs${query ? `?${query}` : ""}`);
+    },
   };
 }
 

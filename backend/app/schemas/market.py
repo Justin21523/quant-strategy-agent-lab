@@ -163,3 +163,97 @@ class SyncResponse(BaseModel):
     results: list[SymbolSyncResultResponse]
     successful: int = Field(ge=0)
     failed: int = Field(ge=0)
+
+
+class BatchSyncRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    universe_id: str
+    provider: ProviderSelection = ProviderSelection.YFINANCE
+    start: date
+    end: date
+    chunk_size: int = Field(default=50, ge=1, le=100)
+    cursor: int = Field(default=0, ge=0)
+    allow_fallback: bool = False
+    mode: Literal["all", "missing_or_stale", "retry_failed"] = "all"
+    stale_after: date | None = None
+    failed_run_id: str | None = None
+
+    @model_validator(mode="after")
+    def validate_dates(self) -> BatchSyncRequest:
+        if self.start > self.end:
+            raise ValueError("start must be on or before end")
+        if self.mode == "missing_or_stale" and self.stale_after is None:
+            raise ValueError("stale_after is required when mode is missing_or_stale")
+        if self.mode == "retry_failed" and not self.failed_run_id:
+            raise ValueError("failed_run_id is required when mode is retry_failed")
+        return self
+
+
+class BatchSyncResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    run_id: str
+    child_sync_run_id: str
+    universe_id: str
+    cursor_start: int = Field(ge=0)
+    cursor_end: int = Field(ge=0)
+    next_cursor: int | None
+    complete: bool
+    processed: int = Field(ge=0)
+    successful: int = Field(ge=0)
+    failed: int = Field(ge=0)
+    results: list[SymbolSyncResultResponse]
+
+
+class BatchSyncRunResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    run_id: str
+    child_sync_run_id: str
+    universe_id: str
+    requested_provider: str
+    requested_range: DateRangeResponse
+    chunk_size: int = Field(ge=1)
+    cursor_start: int = Field(ge=0)
+    cursor_end: int = Field(ge=0)
+    next_cursor: int | None
+    complete: bool
+    processed: int = Field(ge=0)
+    successful: int = Field(ge=0)
+    failed: int = Field(ge=0)
+    created_at: datetime
+
+
+class BatchSyncRunListResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    total: int = Field(ge=0)
+    runs: list[BatchSyncRunResponse]
+
+
+class SyncRunRecordResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    run_id: str
+    symbol: str
+    requested_provider: str
+    provider_used: str | None
+    requested_range: DateRangeResponse
+    effective_range: DateRangeResponse
+    status: SyncStatus
+    bars_received: int = Field(ge=0)
+    bars_stored: int = Field(ge=0)
+    fallback_used: bool
+    is_fixture_data: bool
+    warnings: list[DataQualityWarningResponse]
+    attempts: list[str]
+    error: str | None
+    created_at: datetime
+
+
+class SyncRunRecordListResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    total: int = Field(ge=0)
+    records: list[SyncRunRecordResponse]

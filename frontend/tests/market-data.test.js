@@ -44,6 +44,22 @@ test("market service builds read and synchronization contracts", async () => {
     end: "2025-12-31",
     allowFallback: true,
   });
+  await service.batchSync({
+    universeId: "us_common_stocks",
+    start: "2025-01-01",
+    end: "2025-12-31",
+    chunkSize: 25,
+    cursor: 50,
+  });
+  await service.batchSync({
+    universeId: "us_common_stocks",
+    start: "2025-01-01",
+    end: "2025-12-31",
+    mode: "retry_failed",
+    failedRunId: "sync_123",
+  });
+  await service.getBatchSyncRuns({ universeId: "us_common_stocks", limit: 10 });
+  await service.getSyncRuns({ runId: "sync_123", limit: 25 });
 
   assert.deepEqual(calls[0], [
     "GET",
@@ -58,6 +74,36 @@ test("market service builds read and synchronization contracts", async () => {
     allow_fallback: true,
   });
   assert.equal(calls[2][3].timeoutMs, 20_000);
+  assert.deepEqual(calls[3], [
+    "POST",
+    "/api/v1/market/batch-sync",
+    {
+      universe_id: "us_common_stocks",
+      provider: "yfinance",
+      start: "2025-01-01",
+      end: "2025-12-31",
+      chunk_size: 25,
+      cursor: 50,
+      allow_fallback: false,
+    },
+    { timeoutMs: 60_000 },
+  ]);
+  assert.deepEqual(calls[4][2], {
+    universe_id: "us_common_stocks",
+    provider: "yfinance",
+    start: "2025-01-01",
+    end: "2025-12-31",
+    chunk_size: 50,
+    cursor: 0,
+    allow_fallback: false,
+    mode: "retry_failed",
+    failed_run_id: "sync_123",
+  });
+  assert.deepEqual(calls[5], [
+    "GET",
+    "/api/v1/market/batch-sync/runs?universe_id=us_common_stocks&limit=10",
+  ]);
+  assert.deepEqual(calls[6], ["GET", "/api/v1/market/sync-runs?run_id=sync_123&limit=25"]);
 });
 
 test("market formatters provide stable display fallbacks", () => {

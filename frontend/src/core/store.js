@@ -1,4 +1,4 @@
-function createStore(initialState) {
+export function createStore(initialState) {
   let state = structuredClone(initialState);
   const listeners = new Set();
 

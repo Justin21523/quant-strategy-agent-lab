@@ -1,4 +1,5 @@
-from datetime import date
+import json
+from datetime import date, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
@@ -10,6 +11,7 @@ from app.domain.market import (
     DataQualityWarning,
     MarketSeries,
     ProviderInfo,
+    SymbolSyncOutcome,
     SyncStatus,
 )
 from app.schemas.indicators import (
@@ -19,6 +21,10 @@ from app.schemas.indicators import (
     IndicatorWarningResponse,
 )
 from app.schemas.market import (
+    BatchSyncRequest,
+    BatchSyncResponse,
+    BatchSyncRunListResponse,
+    BatchSyncRunResponse,
     DataQualityWarningResponse,
     DataSourceResponse,
     DateRangeResponse,
@@ -31,6 +37,8 @@ from app.schemas.market import (
     SymbolSyncResultResponse,
     SyncRequest,
     SyncResponse,
+    SyncRunRecordListResponse,
+    SyncRunRecordResponse,
 )
 from app.services.indicator_service import IndicatorService
 from app.services.market_data_service import MarketDataService
@@ -93,29 +101,75 @@ def sync_market_data(request: SyncRequest, service: ServiceDependency) -> SyncRe
         run_id=run_id,
         status=overall,
         requested_range=DateRangeResponse(start=request.start, end=request.end),
-        results=[
-            SymbolSyncResultResponse(
-                symbol=item.symbol,
-                status=item.status,
-                requested_provider=item.requested_provider,
-                provider_used=item.provider_used,
-                fallback_used=item.fallback_used,
-                bars_received=item.bars_received,
-                bars_stored=item.bars_stored,
-                effective_range=DateRangeResponse(
-                    start=item.effective_start,
-                    end=item.effective_end,
-                ),
-                is_fixture_data=item.is_fixture_data,
-                warnings=[_warning_response(warning) for warning in item.warnings],
-                attempts=list(item.attempts),
-                error=item.error,
-            )
-            for item in outcomes
-        ],
+        results=[_sync_result_response(item) for item in outcomes],
         successful=successful,
         failed=failed,
     )
+
+
+@router.post(
+    "/batch-sync",
+    response_model=BatchSyncResponse,
+    summary="Synchronize one chunk from a market universe into cache",
+)
+def batch_sync_market_data(
+    request: BatchSyncRequest, service: ServiceDependency
+) -> BatchSyncResponse:
+    result = service.batch_sync_universe(
+        request.universe_id,
+        start=request.start,
+        end=request.end,
+        provider=request.provider,
+        chunk_size=request.chunk_size,
+        cursor=request.cursor,
+        allow_fallback=request.allow_fallback,
+        mode=request.mode,
+        stale_after=request.stale_after,
+        failed_run_id=request.failed_run_id,
+    )
+    return BatchSyncResponse(
+        run_id=result.run_id,
+        child_sync_run_id=result.child_sync_run_id,
+        universe_id=result.universe_id,
+        cursor_start=result.cursor_start,
+        cursor_end=result.cursor_end,
+        next_cursor=result.next_cursor,
+        complete=result.complete,
+        processed=result.processed,
+        successful=result.successful,
+        failed=result.failed,
+        results=[_sync_result_response(item) for item in result.outcomes],
+    )
+
+
+@router.get(
+    "/batch-sync/runs",
+    response_model=BatchSyncRunListResponse,
+    summary="List recent market batch-sync runs",
+)
+def list_batch_sync_runs(
+    service: ServiceDependency,
+    universe_id: str | None = None,
+    limit: int = 20,
+) -> BatchSyncRunListResponse:
+    rows = service.repository.list_batch_sync_runs(universe_id=universe_id, limit=limit)
+    runs = [_batch_sync_run_response(row) for row in rows]
+    return BatchSyncRunListResponse(total=len(runs), runs=runs)
+
+
+@router.get(
+    "/sync-runs",
+    response_model=SyncRunRecordListResponse,
+    summary="List symbol-level market sync records",
+)
+def list_sync_runs(
+    service: ServiceDependency,
+    run_id: str | None = None,
+    limit: int = 100,
+) -> SyncRunRecordListResponse:
+    rows = service.repository.list_sync_runs(run_id=run_id, limit=limit)
+    records = [_sync_run_record_response(row) for row in rows]
+    return SyncRunRecordListResponse(total=len(records), records=records)
 
 
 def _series_response(
@@ -211,6 +265,88 @@ def _indicator_warning_response(warning: IndicatorWarning) -> IndicatorWarningRe
         message=warning.message,
         context=warning.context,
     )
+
+
+def _sync_result_response(item: SymbolSyncOutcome) -> SymbolSyncResultResponse:
+    return SymbolSyncResultResponse(
+        symbol=item.symbol,
+        status=item.status,
+        requested_provider=item.requested_provider,
+        provider_used=item.provider_used,
+        fallback_used=item.fallback_used,
+        bars_received=item.bars_received,
+        bars_stored=item.bars_stored,
+        effective_range=DateRangeResponse(
+            start=item.effective_start,
+            end=item.effective_end,
+        ),
+        is_fixture_data=item.is_fixture_data,
+        warnings=[_warning_response(warning) for warning in item.warnings],
+        attempts=list(item.attempts),
+        error=item.error,
+    )
+
+
+def _batch_sync_run_response(row: dict[str, object]) -> BatchSyncRunResponse:
+    return BatchSyncRunResponse(
+        run_id=str(row["run_id"]),
+        child_sync_run_id=str(row["child_sync_run_id"]),
+        universe_id=str(row["universe_id"]),
+        requested_provider=str(row["requested_provider"]),
+        requested_range=DateRangeResponse(
+            start=_optional_date(row["requested_start"]),
+            end=_optional_date(row["requested_end"]),
+        ),
+        chunk_size=int(row["chunk_size"]),
+        cursor_start=int(row["cursor_start"]),
+        cursor_end=int(row["cursor_end"]),
+        next_cursor=int(row["next_cursor"]) if row["next_cursor"] is not None else None,
+        complete=bool(row["complete"]),
+        processed=int(row["processed"]),
+        successful=int(row["successful"]),
+        failed=int(row["failed"]),
+        created_at=datetime.fromisoformat(str(row["created_at"])),
+    )
+
+
+def _sync_run_record_response(row: dict[str, object]) -> SyncRunRecordResponse:
+    warnings = json.loads(str(row["warnings_json"]))
+    return SyncRunRecordResponse(
+        run_id=str(row["run_id"]),
+        symbol=str(row["symbol"]),
+        requested_provider=str(row["requested_provider"]),
+        provider_used=str(row["provider_used"]) if row["provider_used"] else None,
+        requested_range=DateRangeResponse(
+            start=_optional_date(row["requested_start"]),
+            end=_optional_date(row["requested_end"]),
+        ),
+        effective_range=DateRangeResponse(
+            start=_optional_date(row["effective_start"]),
+            end=_optional_date(row["effective_end"]),
+        ),
+        status=SyncStatus(str(row["status"])),
+        bars_received=int(row["bars_received"]),
+        bars_stored=int(row["bars_stored"]),
+        fallback_used=bool(row["fallback_used"]),
+        is_fixture_data=bool(row["is_fixture_data"]),
+        warnings=[
+            DataQualityWarningResponse(
+                code=str(item["code"]),
+                severity=item["severity"],
+                message=str(item["message"]),
+                affected_rows=int(item.get("affected_rows", 0)),
+                context=dict(item.get("context", {})),
+            )
+            for item in warnings
+        ],
+        attempts=list(json.loads(str(row["attempts_json"]))),
+        error=str(row["error"]) if row["error"] else None,
+        created_at=datetime.fromisoformat(str(row["created_at"])),
+    )
+
+
+def _optional_date(value: object) -> date | None:
+    return date.fromisoformat(str(value)) if value else None
 
 
 def _symbol_response(summary: CachedSymbolSummary) -> SymbolResponse:

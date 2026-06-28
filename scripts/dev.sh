@@ -91,6 +91,13 @@ Frontend: http://127.0.0.1:${FRONTEND_PORT}
 Market Data Lab: http://127.0.0.1:${FRONTEND_PORT}/#/market-data
 Strategy Builder: http://127.0.0.1:${FRONTEND_PORT}/#/strategy-builder
 Backtest Lab: http://127.0.0.1:${FRONTEND_PORT}/#/backtest-lab
+Agent Workflow: http://127.0.0.1:${FRONTEND_PORT}/#/agent-workflow
+Stock Scanner: http://127.0.0.1:${FRONTEND_PORT}/#/parameter-scanner
+Data Quality: http://127.0.0.1:${FRONTEND_PORT}/#/data-quality
+Multi-Asset Comparison: http://127.0.0.1:${FRONTEND_PORT}/#/comparison
+Performance Report: http://127.0.0.1:${FRONTEND_PORT}/#/performance-report
+Portfolio Rebalance: http://127.0.0.1:${FRONTEND_PORT}/#/portfolio-rebalance
+Jobs: http://127.0.0.1:${FRONTEND_PORT}/#/jobs
 EOF
 
 wait -n "${backend_pid}" "${frontend_pid}"

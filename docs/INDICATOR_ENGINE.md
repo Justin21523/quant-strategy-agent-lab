@@ -41,67 +41,47 @@ atr_14
 
 ## API contract
 
-The existing OHLCV endpoint remains backward-compatible. Without `include_indicators=true`, every bar contains an empty `indicators` object.
+The OHLCV endpoint can optionally include a top-level indicator bundle. Without `include_indicators=true`, the `indicators` field is omitted.
 
 ```http
 GET /api/v1/market/ohlcv?symbol=AAPL&start=2023-01-03&end=2023-04-10
 ```
 
-With `include_indicators=true`, the response includes top-level indicator metadata and per-bar values.
+With `include_indicators=true`, the response includes top-level indicator metadata and date-aligned series values.
 
 ```http
 GET /api/v1/market/ohlcv?symbol=AAPL&start=2023-01-03&end=2023-04-10&include_indicators=true
 ```
 
-Example bar:
+Example indicator bundle shape:
 
 ```json
 {
-  "date": "2023-04-10",
-  "open": 132.12,
-  "high": 133.41,
-  "low": 130.78,
-  "close": 131.95,
-  "adjusted_close": 131.95,
-  "volume": 52200100,
-  "provider": "csv",
-  "is_fixture_data": true,
-  "indicators": {
-    "sma_20": 133.77299,
-    "sma_60": 135.89411333333334,
-    "rsi_14": 4.919182122762578
-  }
+  "profile": "default",
+  "count": 7,
+  "series": [
+    {
+      "key": "sma_20",
+      "kind": "sma",
+      "label": "SMA 20",
+      "pane": "price",
+      "parameters": {"window": 20, "source": "close"},
+      "warmup_period": 20,
+      "values": [{"date": "2023-01-03", "values": {"sma_20": null}}]
+    }
+  ],
+  "warnings": []
 }
-```
-
-## Custom syntax
-
-The optional `indicators` query parameter accepts a comma-separated contract:
-
-```text
-sma:<window>
-ema:<window>
-rsi:<window>
-atr:<window>
-macd:<fast>:<slow>:<signal>
-bbands:<window>[:standard_deviations]
-```
-
-Example:
-
-```http
-GET /api/v1/market/ohlcv?symbol=SPY&include_indicators=true&indicators=sma:10,rsi:7,macd:6:13:5,bbands:20:2,atr:14
 ```
 
 ## Warm-up behavior
 
 Indicators are aligned with the input bars. Values before the indicator has enough data are returned as `null`, not removed. This keeps chart rendering, table previews, and future backtest signal generation aligned by date.
 
-If the selected date range is too short, the API adds structured warnings:
+If the selected date range is too short, the indicator bundle adds structured warnings:
 
 ```text
-indicator_warmup_exceeds_series
-indicator_no_valid_points
+insufficient_warmup_rows
 ```
 
 ## Testing policy

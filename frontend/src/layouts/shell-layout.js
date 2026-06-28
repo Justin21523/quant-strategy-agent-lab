@@ -1,11 +1,13 @@
 import { createElement } from "../core/dom.js";
+import { createSiteGuide } from "../core/site-guide.js";
 import { createSidebar } from "./sidebar.js";
 import { createStatusBar } from "./status-bar.js";
 import { createTopbar } from "./topbar.js";
 
 export function createShellLayout({ apiDocsUrl }) {
+  const siteGuide = createSiteGuide();
   const sidebar = createSidebar();
-  const topbar = createTopbar({ apiDocsUrl });
+  const topbar = createTopbar({ apiDocsUrl, onGuideClick: () => siteGuide.start() });
   const statusBar = createStatusBar();
   const outlet = createElement("main", {
     className: "page-outlet",
@@ -25,10 +27,12 @@ export function createShellLayout({ apiDocsUrl }) {
   return {
     element,
     outlet,
+    siteGuide,
     update(state) {
       sidebar.update(state.route);
       topbar.update(state);
       statusBar.update(state);
+      siteGuide.refresh();
     },
   };
 }

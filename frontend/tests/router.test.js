@@ -1,17 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { matchRoute } from "../src/core/router.js";
+import { normalizeHashPath } from "../src/core/router.js";
 
-const routes = [
-  { path: "/", label: "Home" },
-  { path: "/backtest-lab", label: "Backtest" },
-];
-
-test("matchRoute normalizes hash paths", () => {
-  assert.equal(matchRoute(routes, "#/backtest-lab").label, "Backtest");
+test("normalizeHashPath strips hash and query strings", () => {
+  assert.equal(normalizeHashPath("#/backtest-lab?symbol=AAPL"), "/backtest-lab");
 });
 
-test("matchRoute falls back to the first route", () => {
-  assert.equal(matchRoute(routes, "#/unknown").label, "Home");
+test("normalizeHashPath falls back to root for empty hashes", () => {
+  assert.equal(normalizeHashPath("#"), "/");
+  assert.equal(normalizeHashPath(""), "/");
 });

@@ -1,5 +1,10 @@
 import { createBacktestCandlestickChart } from "../charts/backtest-candlestick-chart.js";
 import { createBacktestLineChart } from "../charts/backtest-line-chart.js";
+import {
+  BACKTEST_WORKFLOW_STEPS,
+  createAgentTimeline,
+  mergeAgentSteps,
+} from "../components/agent-timeline.js";
 import { createBacktestTradeTable } from "../components/backtest-trade-table.js";
 import { createMetricCard } from "../components/metric-card.js";
 import { createStrategyJsonPreview } from "../components/strategy-json-preview.js";
@@ -70,7 +75,7 @@ export function createBacktestLabPage() {
   });
   const parameterFields = createElement("div", { className: "strategy-parameter-grid" });
   const metricGrid = createElement("div", { className: "metric-grid" });
-  const stepList = createElement("ol", { className: "agent-timeline" });
+  const agentTimeline = createAgentTimeline({ steps: BACKTEST_WORKFLOW_STEPS });
   const warningsList = createElement("ul", { className: "backtest-warning-list" });
   const preview = createStrategyJsonPreview();
   const tradeTable = createBacktestTradeTable();
@@ -102,7 +107,7 @@ export function createBacktestLabPage() {
       createElement("header", {
         className: "page-header page-header--wide",
         children: [
-          createElement("span", { className: "eyebrow", text: "Phase 5 · Backtest Lab Frontend" }),
+          createElement("span", { className: "eyebrow", text: "Phase 6 · Agent Timeline MVP" }),
           createElement("h1", { text: "Interactive strategy backtest workbench." }),
           createElement("p", {
             text: "Choose a cached asset, render a Strategy JSON template, run the deterministic engine, then inspect candles, buy/sell markers, equity, drawdown, metrics, trades, warnings, and execution steps.",
@@ -168,6 +173,7 @@ export function createBacktestLabPage() {
       metricGrid,
       createElement("article", {
         className: "panel backtest-chart-panel",
+        attributes: { "data-guide": "backtest-chart" },
         children: [
           createElement("div", {
             className: "panel__header",
@@ -239,7 +245,7 @@ export function createBacktestLabPage() {
                   }),
                 ],
               }),
-              stepList,
+              agentTimeline,
             ],
           }),
           createElement("article", {
@@ -409,28 +415,12 @@ export function createBacktestLabPage() {
   }
 
   function updateSteps(steps = []) {
-    if (!steps.length) {
-      stepList.replaceChildren(
-        createElement("li", { className: "empty-copy", text: "Run a backtest to see steps." }),
-      );
-      return;
-    }
-    stepList.replaceChildren(
-      ...steps.map((step, index) =>
-        createElement("li", {
-          className: "agent-step",
-          dataset: { status: step.status },
-          children: [
-            createElement("span", { className: "agent-step__index", text: String(index + 1) }),
-            createElement("div", {
-              children: [
-                createElement("strong", { text: step.key }),
-                createElement("p", { text: step.message }),
-              ],
-            }),
-          ],
-        }),
-      ),
+    agentTimeline.update(mergeAgentSteps(BACKTEST_WORKFLOW_STEPS, steps));
+  }
+
+  function markWorkflowRunning(key, message) {
+    agentTimeline.update(
+      mergeAgentSteps(BACKTEST_WORKFLOW_STEPS, [{ key, status: "running", message }]),
     );
   }
 
@@ -459,8 +449,13 @@ export function createBacktestLabPage() {
     if (!selectedTemplate) return;
     setBusy(true);
     setActivity("loading", "Rendering template and executing backtest…");
+    markWorkflowRunning("strategy_received", "Rendering selected template into Strategy JSON DSL…");
     try {
       const strategyJson = await refreshStrategyPreview();
+      markWorkflowRunning(
+        "validate_strategy",
+        "Submitting Strategy JSON DSL to the backtest engine…",
+      );
       const result = await backtestService.run(strategyJson);
       if (destroyed) return;
       let overlayBars = [];
@@ -497,7 +492,10 @@ export function createBacktestLabPage() {
         `${result.strategy_name}: ${result.metrics.trade_count} trade(s), ${formatPercent(result.metrics.total_return_pct)} total return.`,
       );
     } catch (error) {
-      if (!destroyed) setActivity("error", apiMessage(error));
+      if (!destroyed) {
+        agentTimeline.markFailed(apiMessage(error));
+        setActivity("error", apiMessage(error));
+      }
     } finally {
       if (!destroyed) setBusy(false);
     }
@@ -548,11 +546,14 @@ export function createBacktestLabPage() {
       templateSelect.value = selectedTemplate.id;
       renderParameterFields();
       await refreshStrategyPreview();
-      updateSteps();
+      updateSteps(BACKTEST_WORKFLOW_STEPS);
       updateWarnings();
-      setActivity("success", "Ready to run an interactive Phase 5 backtest workflow.");
+      setActivity("success", "Ready to run an inspectable Phase 6 Agent timeline workflow.");
     } catch (error) {
-      if (!destroyed) setActivity("error", apiMessage(error));
+      if (!destroyed) {
+        agentTimeline.markFailed(apiMessage(error));
+        setActivity("error", apiMessage(error));
+      }
     } finally {
       if (!destroyed) setBusy(false);
     }

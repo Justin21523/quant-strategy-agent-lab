@@ -141,8 +141,10 @@ def test_service_enforces_response_limit(tmp_path: Path) -> None:
 def test_csv_provider_metadata_and_dates() -> None:
     provider = CsvMarketDataProvider(BACKEND_DIRECTORY / "data" / "seed")
     symbols = provider.list_symbols()
-    assert [item.symbol for item in symbols] == ["AAPL", "QQQ", "SPY"]
-    result = provider.fetch_ohlcv(symbols[0], date(2023, 1, 3), date(2023, 1, 4))
+    assert len(symbols) == 22
+    assert [item.symbol for item in symbols[:3]] == ["AAPL", "ALFA", "BRAV"]
+    aapl = next(item for item in symbols if item.symbol == "AAPL")
+    result = provider.fetch_ohlcv(aapl, date(2023, 1, 3), date(2023, 1, 4))
     assert result.is_fixture_data is True
     assert result.is_adjusted is False
     assert len(result.bars) == 2

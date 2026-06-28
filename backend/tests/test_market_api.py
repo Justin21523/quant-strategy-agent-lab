@@ -5,9 +5,13 @@ def test_symbol_catalog_is_bootstrapped(client: TestClient) -> None:
     response = client.get("/api/v1/market/symbols")
     assert response.status_code == 200
     body = response.json()
-    assert body["total"] == 3
-    assert [item["symbol"] for item in body["symbols"]] == ["AAPL", "QQQ", "SPY"]
-    assert all(item["cached_bar_count"] == 782 for item in body["symbols"])
+    symbols = [item["symbol"] for item in body["symbols"]]
+    assert body["total"] == 22
+    assert {"AAPL", "QQQ", "SPY", "ALFA", "SIER"} <= set(symbols)
+    assert (
+        next(item for item in body["symbols"] if item["symbol"] == "AAPL")["cached_bar_count"]
+        == 782
+    )
     assert all(item["cached_providers"] == ["csv"] for item in body["symbols"])
     assert {item["provider"] for item in body["providers"]} == {
         "csv",
@@ -30,11 +34,12 @@ def test_provider_capabilities_endpoint(client: TestClient) -> None:
 def test_symbol_filters(client: TestClient) -> None:
     equity = client.get("/api/v1/market/symbols?asset_type=equity")
     assert equity.status_code == 200
-    assert [item["symbol"] for item in equity.json()["symbols"]] == ["AAPL"]
+    assert equity.json()["total"] == 20
+    assert [item["symbol"] for item in equity.json()["symbols"]][:3] == ["AAPL", "ALFA", "BRAV"]
 
     us = client.get("/api/v1/market/symbols?market=us")
     assert us.status_code == 200
-    assert us.json()["total"] == 3
+    assert us.json()["total"] == 22
 
 
 def test_ohlcv_response_includes_source_and_warning(client: TestClient) -> None:

@@ -1,7 +1,11 @@
-function routeFromHash() {
-  const rawHash = window.location.hash.replace(/^#/, "");
+export function normalizeHashPath(hash) {
+  const rawHash = hash.replace(/^#/, "");
   const path = rawHash.split("?")[0] || "/";
   return path.startsWith("/") ? path : `/${path}`;
+}
+
+function routeFromHash() {
+  return normalizeHashPath(window.location.hash);
 }
 
 function resolvePage(page) {

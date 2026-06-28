@@ -1,7 +1,7 @@
 SHELL := /usr/bin/env bash
 .DEFAULT_GOAL := help
 
-.PHONY: help bootstrap dev backend frontend seed test lint format build check clean init-git
+.PHONY: help bootstrap dev backend frontend seed test e2e lint format build check clean init-git
 
 help:
 	@printf '%s\n' \
@@ -12,10 +12,11 @@ help:
 	  '  make frontend   Start only Vite' \
 	  '  make seed       Regenerate deterministic offline OHLCV fixtures' \
 	  '  make test       Run backend and frontend tests' \
+	  '  make e2e        Run browser-driven research pipeline smoke test' \
 	  '  make lint       Run Python and JavaScript linters' \
 	  '  make format     Format backend and frontend code' \
 	  '  make build      Build the frontend' \
-	  '  make check      Run all Phase 4 quality gates' \
+	  '  make check      Run all Phase 9A quality gates' \
 	  '  make clean      Remove generated files and local cache' \
 	  '  make init-git   Initialize a local Git repository'
 
@@ -43,6 +44,10 @@ test:
 	@test -x .venv/bin/python || (echo 'Run make bootstrap first.' && exit 1)
 	cd backend && ../.venv/bin/python -m pytest
 	npm --prefix frontend run test
+
+e2e:
+	@test -x .venv/bin/uvicorn || (echo 'Run make bootstrap first.' && exit 1)
+	npm --prefix frontend run e2e
 
 lint:
 	@test -x .venv/bin/ruff || (echo 'Run make bootstrap first.' && exit 1)

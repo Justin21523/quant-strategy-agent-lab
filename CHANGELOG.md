@@ -1,5 +1,54 @@
 # Changelog
 
+## 0.11.0 — Phase 9B In-App Research Demo Automation
+
+- Added a deterministic 20-stock synthetic sample universe for automated workflow demos.
+- Added research demo job/API endpoints that run sample sync, quality report, scanner, portfolio preset matrix, and multi-strategy comparison.
+- Added a Dashboard demo mode with an Activate Demo browser-guided app tour.
+- Expanded Playwright E2E coverage to verify the in-app demo automation.
+- Advanced project version to `0.11.0` and status to Phase 9B.
+
+## 0.10.0 — Phase 9A Portfolio Rebalance and Job Queue
+
+- Added equal-weight portfolio rebalance runs with weekly/monthly cadence, turnover, skipped periods, holdings, and equity curves.
+- Added richer performance analysis with CAGR, annual volatility, Sharpe, Sortino, Calmar, rolling drawdown, monthly returns, and benchmark comparison.
+- Added scanner-to-portfolio presets for Trend Momentum, Low Volatility Trend, and Oversold Watchlist workflows.
+- Added a SQLite-backed job queue for batch sync, scanner runs, and portfolio rebalance jobs with progress events.
+- Integrated reusable data-quality gates into scanner and portfolio workflows.
+- Added Portfolio Rebalance, Jobs, and strengthened Performance frontend pages.
+- Advanced project version to `0.10.0` and status to Phase 9A.
+
+## 0.9.0 — Phase 8A Scanner Operations and Multi-Asset Backtest
+
+- Added scanner presets, toggleable scanner filters, saved scan-run listing, skipped-symbol persistence, and richer sortable metrics.
+- Added batch-sync history APIs plus missing/stale sync and failed-symbol retry modes.
+- Added universe data-quality reports for coverage, missing weekdays, fixture flags, and SMA200/252D readiness.
+- Added scanner-driven multi-asset backtest runs with aggregate and per-symbol performance ranking.
+- Added Data Quality and Multi-Asset Comparison frontend pages.
+- Advanced project version to `0.9.0` and status to Phase 8A.
+
+## 0.8.0 — Phase 7A Market Universe and Scanner Foundation
+
+- Added US common-stock universe refresh from Nasdaq Trader symbol directory files.
+- Added cursor-based `/api/v1/market/batch-sync` for chunked universe synchronization.
+- Added saved technical scanner runs at `/api/v1/scans/run` and `/api/v1/scans/{run_id}`.
+- Replaced the placeholder Parameter Scanner route with an interactive Stock Scanner UI.
+- Advanced project version to `0.8.0` and status to Phase 7A.
+
+## 0.7.0 — Phase 6 Agent Timeline MVP
+
+- Added canonical Agent workflow metadata at `/api/v1/agent/backtest-workflow`.
+- Added Agent Workflow frontend route and reusable timeline state handling.
+- Integrated runtime backtest `agent_steps` into the Backtest Lab timeline.
+- Advanced project version to `0.7.0` and status to Phase 6.
+
+## 0.6.0 — Phase 5 Backtest Lab Frontend
+
+- Added candlestick chart support with buy/sell markers.
+- Expanded Backtest Lab result panels, metric presentation, and trade inspection UI.
+- Added frontend tests for backtest chart normalization and marker generation.
+- Advanced project version to `0.6.0` and status to Phase 5.
+
 ## 0.5.0 — Phase 4 Backtest Engine MVP
 
 - Added deterministic long-only Backtest Engine MVP.

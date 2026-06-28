@@ -26,11 +26,14 @@ class BacktestWarningResponse(BaseModel):
 class BacktestAgentStepResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
+    sequence: int = Field(ge=1)
     key: str
     label: str
+    description: str
     status: BacktestStepStatus
     message: str
     detail: dict[str, object] = Field(default_factory=dict)
+    duration_ms: float | None = Field(default=None, ge=0)
 
 
 class BacktestDataSummaryResponse(BaseModel):

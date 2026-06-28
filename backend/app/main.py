@@ -22,6 +22,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     logger.info("Starting %s version=%s", settings.project_name, __version__)
     app.state.container.initialize()
     yield
+    app.state.container.shutdown()
     logger.info("Stopping %s", settings.project_name)
 
 
@@ -60,13 +61,21 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             "name": resolved.project_name,
             "version": __version__,
             "environment": resolved.environment,
-            "phase": "phase-5",
+            "phase": "phase-9f",
             "docs": "/docs",
             "health": f"{resolved.api_v1_prefix}/health",
             "market": f"{resolved.api_v1_prefix}/market/symbols",
             "indicators": f"{resolved.api_v1_prefix}/indicators/catalog",
             "strategies": f"{resolved.api_v1_prefix}/strategies/templates",
             "backtests": f"{resolved.api_v1_prefix}/backtests/run",
+            "universes": f"{resolved.api_v1_prefix}/universes",
+            "scans": f"{resolved.api_v1_prefix}/scans/run",
+            "data_quality": f"{resolved.api_v1_prefix}/data-quality/universes/us_common_stocks",
+            "multi_backtests": f"{resolved.api_v1_prefix}/multi-backtests/run",
+            "portfolio_rebalance": f"{resolved.api_v1_prefix}/portfolios/rebalance",
+            "jobs": f"{resolved.api_v1_prefix}/jobs",
+            "demo": f"{resolved.api_v1_prefix}/demo/research/latest",
+            "research": f"{resolved.api_v1_prefix}/research/runs/latest",
             "disclaimer": "Educational and research use only; not investment advice.",
         }
 

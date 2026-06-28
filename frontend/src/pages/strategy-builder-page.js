@@ -143,6 +143,7 @@ export function createStrategyBuilderPage() {
           }),
           createElement("article", {
             className: "panel strategy-editor-panel",
+            attributes: { "data-guide": "strategy-editor" },
             children: [
               createElement("div", {
                 className: "panel__header",

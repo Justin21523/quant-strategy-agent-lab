@@ -5,6 +5,7 @@ export function createStatusBar() {
   const routeMessage = createElement("code", { text: "#/" });
   const element = createElement("footer", {
     className: "status-bar",
+    attributes: { "data-guide": "shell-status" },
     children: [
       createElement("div", {
         className: "status-bar__item",
@@ -15,7 +16,7 @@ export function createStatusBar() {
         children: [
           createElement("span", { text: "Route" }),
           routeMessage,
-          createElement("span", { text: "v0.6.0 · Phase 5" }),
+          createElement("span", { text: "v0.15.0 · Phase 9F" }),
         ],
       }),
     ],

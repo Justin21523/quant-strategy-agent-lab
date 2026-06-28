@@ -13,8 +13,12 @@ class BacktestWarningSeverity(StrEnum):
 
 
 class BacktestStepStatus(StrEnum):
+    PENDING = "pending"
+    RUNNING = "running"
     SUCCESS = "success"
     WARNING = "warning"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
     ERROR = "error"
 
 

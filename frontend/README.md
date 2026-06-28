@@ -7,8 +7,11 @@ npm ci
 npm run dev
 npm run lint
 npm run test
+npm run e2e
 npm run build
 ```
+
+`npm run e2e` runs the Playwright browser smoke test for the research pipeline. It starts its own backend/frontend servers, seeds a deterministic local universe, queues scanner and portfolio jobs, and verifies the Performance Report page.
 
 ## Module rules
 

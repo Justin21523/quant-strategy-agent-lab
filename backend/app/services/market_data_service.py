@@ -8,9 +8,11 @@ from app.domain.errors import (
     MarketDataError,
     MarketDataLimitError,
     MarketDataNotFoundError,
+    UniverseNotFoundError,
     UnsupportedProviderError,
 )
 from app.domain.market import (
+    BatchSyncResult,
     CachedSymbolSummary,
     DataQualityWarning,
     MarketCacheStats,
@@ -289,6 +291,112 @@ class MarketDataService:
             )
             outcomes.append(outcome)
         return run_id, tuple(outcomes)
+
+    def batch_sync_universe(
+        self,
+        universe_id: str,
+        *,
+        start: date,
+        end: date,
+        provider: ProviderSelection = ProviderSelection.YFINANCE,
+        chunk_size: int = 50,
+        cursor: int = 0,
+        allow_fallback: bool = False,
+        mode: str = "all",
+        stale_after: date | None = None,
+        failed_run_id: str | None = None,
+    ) -> BatchSyncResult:
+        self._validate_range(start, end)
+        universe = self.repository.get_universe(universe_id)
+        if universe is None:
+            raise UniverseNotFoundError(
+                f"Unknown universe: {universe_id}",
+                details={"universe_id": universe_id},
+            )
+        members = self._batch_members(
+            universe.members,
+            mode=mode,
+            stale_after=stale_after,
+            failed_run_id=failed_run_id,
+        )
+        cursor_start = max(0, cursor)
+        cursor_end = min(len(members), cursor_start + chunk_size)
+        chunk = members[cursor_start:cursor_end]
+        child_sync_run_id, outcomes = self.sync(
+            tuple(member.symbol for member in chunk),
+            start=start,
+            end=end,
+            provider=provider,
+            allow_fallback=allow_fallback,
+        )
+        successful = sum(item.status is SyncStatus.SUCCESS for item in outcomes)
+        failed = len(outcomes) - successful
+        next_cursor = None if cursor_end >= len(members) else cursor_end
+        complete = next_cursor is None
+        run_id = f"batch_sync_{uuid4().hex[:12]}"
+        self.repository.record_batch_sync(
+            run_id=run_id,
+            universe_id=universe_id,
+            requested_provider=provider.value,
+            requested_start=start,
+            requested_end=end,
+            chunk_size=chunk_size,
+            cursor_start=cursor_start,
+            cursor_end=cursor_end,
+            next_cursor=next_cursor,
+            complete=complete,
+            processed=len(outcomes),
+            successful=successful,
+            failed=failed,
+            child_sync_run_id=child_sync_run_id,
+        )
+        return BatchSyncResult(
+            run_id=run_id,
+            child_sync_run_id=child_sync_run_id,
+            universe_id=universe_id,
+            cursor_start=cursor_start,
+            cursor_end=cursor_end,
+            next_cursor=next_cursor,
+            complete=complete,
+            processed=len(outcomes),
+            successful=successful,
+            failed=failed,
+            outcomes=outcomes,
+        )
+
+    def _batch_members(
+        self,
+        members,
+        *,
+        mode: str,
+        stale_after: date | None,
+        failed_run_id: str | None,
+    ):
+        if mode == "all":
+            return tuple(members)
+        if mode == "missing_or_stale":
+            if stale_after is None:
+                raise InvalidDateRangeError("stale_after is required for missing_or_stale mode")
+            selected = []
+            for member in members:
+                summary = self.repository.get_symbol_summary(member.symbol)
+                if summary.last_cached_date is None or summary.last_cached_date < stale_after:
+                    selected.append(member)
+            return tuple(selected)
+        if mode == "retry_failed":
+            if not failed_run_id:
+                raise InvalidDateRangeError("failed_run_id is required for retry_failed mode")
+            records = self.repository.list_sync_runs(run_id=failed_run_id, limit=10_000)
+            failed_symbols = {
+                str(record["symbol"]).upper()
+                for record in records
+                if record.get("status") == SyncStatus.FAILED.value
+            }
+            return tuple(member for member in members if member.symbol.upper() in failed_symbols)
+        raise InvalidDateRangeError(
+            f"Unsupported batch sync mode: {mode}",
+            details={"mode": mode},
+        )
 
     def _provider_sequence(
         self, selection: ProviderSelection, allow_fallback: bool

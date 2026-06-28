@@ -1,4 +1,5 @@
-import { apiBaseUrl } from "./config.js";
+import { apiBaseUrl, staticDemoMode } from "./config.js";
+import { handleStaticDemoRequest } from "./static-demo-api.js";
 
 export class ApiError extends Error {
   constructor(message, { status = 0, details = null } = {}) {
@@ -12,6 +13,10 @@ export class ApiError extends Error {
 export function createApiClient({ baseUrl = apiBaseUrl, timeoutMs = 6000 } = {}) {
   async function request(path, requestOptions = {}) {
     const { timeoutMs: requestTimeout = timeoutMs, ...options } = requestOptions;
+    if (staticDemoMode) {
+      return handleStaticDemoRequest(path, options);
+    }
+
     const controller = new AbortController();
     const timeoutId = globalThis.setTimeout(() => controller.abort(), requestTimeout);
 

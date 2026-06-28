@@ -168,3 +168,18 @@ class SymbolSyncOutcome:
     warnings: tuple[DataQualityWarning, ...]
     attempts: tuple[str, ...]
     error: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class BatchSyncResult:
+    run_id: str
+    child_sync_run_id: str
+    universe_id: str
+    cursor_start: int
+    cursor_end: int
+    next_cursor: int | None
+    complete: bool
+    processed: int
+    successful: int
+    failed: int
+    outcomes: tuple[SymbolSyncOutcome, ...]

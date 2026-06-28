@@ -2,12 +2,12 @@ from fastapi.testclient import TestClient
 
 
 def test_indicator_catalog_endpoint(client: TestClient) -> None:
-    response = client.get("/api/v1/market/indicators/catalog")
+    response = client.get("/api/v1/indicators/catalog")
     assert response.status_code == 200
     body = response.json()
-    assert body["total"] == 7
-    keys = {item["key"] for item in body["indicators"]}
-    assert {"sma_20", "sma_60", "rsi_14", "macd_12_26_9", "bbands_20_2", "atr_14"} <= keys
+    assert body["total"] == 6
+    kinds = {item["kind"] for item in body["indicators"]}
+    assert {"sma", "ema", "rsi", "macd", "bollinger_bands", "atr"} == kinds
 
 
 def test_ohlcv_can_include_default_indicators(client: TestClient) -> None:
@@ -22,15 +22,21 @@ def test_ohlcv_can_include_default_indicators(client: TestClient) -> None:
     )
     assert response.status_code == 200
     body = response.json()
-    assert [item["key"] for item in body["indicators"]] == ["sma_20", "sma_60", "rsi_14"]
-    assert body["bars"][0]["indicators"] == {"sma_20": None, "sma_60": None, "rsi_14": None}
-    latest = body["bars"][-1]["indicators"]
-    assert latest["sma_20"] is not None
-    assert latest["sma_60"] is not None
-    assert latest["rsi_14"] is not None
+    assert [item["key"] for item in body["indicators"]["series"]] == [
+        "sma_20",
+        "sma_60",
+        "ema_20",
+        "rsi_14",
+        "macd_12_26_9",
+        "bbands_20_2",
+        "atr_14",
+    ]
+    sma_20 = body["indicators"]["series"][0]
+    assert sma_20["values"][0]["values"]["sma_20"] is None
+    assert sma_20["values"][-1]["values"]["sma_20"] is not None
 
 
-def test_ohlcv_accepts_custom_indicator_specs(client: TestClient) -> None:
+def test_ohlcv_returns_multi_output_indicator_series(client: TestClient) -> None:
     response = client.get(
         "/api/v1/market/ohlcv",
         params={
@@ -38,22 +44,21 @@ def test_ohlcv_accepts_custom_indicator_specs(client: TestClient) -> None:
             "start": "2023-01-03",
             "end": "2023-03-31",
             "include_indicators": "true",
-            "indicators": "sma:10,ema:10,macd:6:13:5,bbands:20:2,atr:14",
         },
     )
     assert response.status_code == 200
     body = response.json()
-    output_keys = {key for item in body["indicators"] for key in item["output_keys"]}
-    assert {
-        "sma_10",
-        "ema_10",
-        "macd_6_13_5_line",
-        "macd_6_13_5_signal",
-        "macd_6_13_5_histogram",
-        "bbands_20_2_upper",
-        "atr_14",
-    } <= output_keys
-    assert any(value is not None for value in body["bars"][-1]["indicators"].values())
+    series_by_key = {item["key"]: item for item in body["indicators"]["series"]}
+    assert set(series_by_key["macd_12_26_9"]["values"][-1]["values"]) == {
+        "macd",
+        "signal",
+        "histogram",
+    }
+    assert set(series_by_key["bbands_20_2"]["values"][-1]["values"]) == {
+        "middle",
+        "upper",
+        "lower",
+    }
 
 
 def test_short_range_produces_indicator_warning(client: TestClient) -> None:
@@ -67,6 +72,5 @@ def test_short_range_produces_indicator_warning(client: TestClient) -> None:
         },
     )
     assert response.status_code == 200
-    codes = {warning["code"] for warning in response.json()["warnings"]}
-    assert "indicator_warmup_exceeds_series" in codes
-    assert "indicator_no_valid_points" in codes
+    codes = {warning["code"] for warning in response.json()["indicators"]["warnings"]}
+    assert "insufficient_warmup_rows" in codes

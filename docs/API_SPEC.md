@@ -1,4 +1,4 @@
-# API Specification — Phase 4
+# API Specification — Phase 9B
 
 All application endpoints are served under `/api/v1`.
 
@@ -12,6 +12,13 @@ Frontend: http://127.0.0.1:<frontend-port>
 Market Data Lab: http://127.0.0.1:<frontend-port>/#/market-data
 Strategy Builder: http://127.0.0.1:<frontend-port>/#/strategy-builder
 Backtest Lab: http://127.0.0.1:<frontend-port>/#/backtest-lab
+Agent Workflow: http://127.0.0.1:<frontend-port>/#/agent-workflow
+Stock Scanner: http://127.0.0.1:<frontend-port>/#/parameter-scanner
+Data Quality: http://127.0.0.1:<frontend-port>/#/data-quality
+Multi-Asset Comparison: http://127.0.0.1:<frontend-port>/#/comparison
+Performance Report: http://127.0.0.1:<frontend-port>/#/performance-report
+Portfolio Rebalance: http://127.0.0.1:<frontend-port>/#/portfolio-rebalance
+Jobs: http://127.0.0.1:<frontend-port>/#/jobs
 ```
 
 ## System endpoints
@@ -32,8 +39,8 @@ Current phase metadata:
 
 ```json
 {
-  "phase": "4",
-  "phase_name": "Backtest Engine MVP"
+  "phase": "9B",
+  "phase_name": "In-App Research Demo Automation"
 }
 ```
 
@@ -62,7 +69,6 @@ start               optional YYYY-MM-DD
 end                 optional YYYY-MM-DD
 interval            optional, currently 1d
 include_indicators  optional boolean
-indicators          optional custom indicator contract
 ```
 
 Example:
@@ -75,11 +81,76 @@ curl 'http://127.0.0.1:<backend-port>/api/v1/market/ohlcv?symbol=AAPL&start=2023
 
 Synchronizes market data from the selected provider into SQLite cache.
 
+### `POST /api/v1/market/batch-sync`
+
+Synchronizes one cursor-based chunk from a universe into the SQLite cache. The default
+provider is `yfinance`, the default chunk size is `50`, and CSV fallback is disabled by
+default so real-market syncs do not silently mix with synthetic fixture data.
+
+```json
+{
+  "universe_id": "us_common_stocks",
+  "provider": "yfinance",
+  "start": "2023-01-03",
+  "end": "2025-12-31",
+  "chunk_size": 50,
+  "cursor": 0,
+  "allow_fallback": false,
+  "mode": "all"
+}
+```
+
+The response includes `next_cursor` and `complete` so the client can continue chunking.
+
+Supported `mode` values:
+
+```text
+all
+missing_or_stale
+retry_failed
+```
+
+`missing_or_stale` requires `stale_after`. `retry_failed` requires `failed_run_id`, using
+a symbol-level sync run id from batch-sync history.
+
+### `GET /api/v1/market/batch-sync/runs`
+
+Lists recent batch-sync runs. Optional query parameters:
+
+```text
+universe_id
+limit
+```
+
+### `GET /api/v1/market/sync-runs`
+
+Lists symbol-level sync records. Optional query parameters:
+
+```text
+run_id
+limit
+```
+
+## Universe endpoints
+
+### `GET /api/v1/universes`
+
+Lists configured market universes.
+
+### `GET /api/v1/universes/{universe_id}`
+
+Returns universe metadata and active members.
+
+### `POST /api/v1/universes/us-common-stocks/refresh`
+
+Refreshes the `us_common_stocks` universe from Nasdaq Trader symbol directory files and
+upserts matching symbols into the local catalog.
+
 ## Indicator endpoints
 
-### `GET /api/v1/market/indicators/catalog`
+### `GET /api/v1/indicators/catalog`
 
-Returns supported technical-indicator specs and output keys.
+Returns supported technical-indicator families and default parameters.
 
 Supported indicator families:
 
@@ -126,7 +197,7 @@ Validates a Strategy JSON DSL document without running it.
 
 ### `POST /api/v1/backtests/run`
 
-Runs one validated Strategy JSON DSL document through the deterministic Phase 4 MVP engine.
+Runs one validated Strategy JSON DSL document through the deterministic backtest engine.
 
 Request body:
 
@@ -181,7 +252,163 @@ warnings
 agent_steps
 ```
 
-Important assumptions returned in the response:
+## Agent workflow endpoints
+
+### `GET /api/v1/agent/backtest-workflow`
+
+Returns the canonical Phase 6 backtest workflow steps used by the Backtest Lab timeline.
+
+## Scanner endpoints
+
+### `GET /api/v1/scans/capabilities`
+
+Returns default scanner rules and sortable metric keys.
+
+### `GET /api/v1/scans/presets`
+
+Returns built-in scanner presets:
+
+```text
+trend_momentum
+pullback_in_uptrend
+volume_breakout
+low_volatility_trend
+oversold_watchlist
+```
+
+### `GET /api/v1/scans`
+
+Lists recent saved scanner runs.
+
+### `POST /api/v1/scans/run`
+
+Runs the technical scanner against cached OHLCV bars for a universe. The scanner does not
+fetch missing bars during scan execution; symbols without enough cached history are skipped.
+
+Default rules:
+
+```text
+close > SMA200
+SMA20 > SMA60
+40 <= RSI14 <= 70
+volume / volume_sma20 >= 1.0
+60-day return > 0%
+```
+
+### `GET /api/v1/scans/{run_id}`
+
+Reads a saved scanner run, ranked result snapshot, and skipped-symbol reasons.
+
+## Data quality endpoints
+
+### `GET /api/v1/data-quality/universes/{universe_id}`
+
+Reports cache quality for universe members in a date range.
+
+Query parameters:
+
+```text
+start   required YYYY-MM-DD
+end     required YYYY-MM-DD
+limit   optional, default 500
+```
+
+The response includes member count, covered symbols, coverage percent, fixture-symbol
+count, SMA200 readiness, 252D return readiness, and per-symbol warnings.
+
+## Multi-asset backtest endpoints
+
+### `POST /api/v1/multi-backtests/run`
+
+Runs one strategy template across the top N symbols from a saved scanner run.
+
+```json
+{
+  "scan_run_id": "scan_xxxxxxxxxxxx",
+  "template_id": "buy_and_hold",
+  "parameters": {},
+  "top_n": 10,
+  "start": "2023-01-03",
+  "end": "2025-12-31",
+  "initial_cash": 100000,
+  "commission": 0.001,
+  "slippage": 0.0005
+}
+```
+
+### `GET /api/v1/multi-backtests`
+
+Lists recent multi-asset backtest runs.
+
+### `GET /api/v1/multi-backtests/{run_id}`
+
+Reads one saved multi-asset backtest run.
+
+## Portfolio rebalance endpoints
+
+### `GET /api/v1/portfolios/presets`
+
+Lists scanner-to-portfolio presets, including monthly Trend Momentum top 20, monthly Low Volatility Trend top 30, and weekly Oversold Watchlist top 10.
+
+### `POST /api/v1/portfolios/presets`
+
+Saves a portfolio preset with scanner preset/rules plus rebalance configuration.
+
+### `GET /api/v1/portfolios/rebalance`
+
+Lists saved portfolio rebalance runs.
+
+### `GET /api/v1/portfolios/rebalance/{run_id}`
+
+Reads one portfolio rebalance run with performance, benchmark report, equity curve, holdings, rebalance events, and skipped periods.
+
+## Job endpoints
+
+### `POST /api/v1/jobs/market/batch-sync`
+
+Queues a long-running market batch sync job.
+
+### `POST /api/v1/jobs/scans/run`
+
+Queues a scanner run job.
+
+### `POST /api/v1/jobs/portfolios/rebalance/run`
+
+Queues a portfolio rebalance job.
+
+### `POST /api/v1/jobs/demo/research/run`
+
+Queues the deterministic in-app research demo workflow.
+
+### `GET /api/v1/jobs`
+
+Lists recent jobs with status, progress, result IDs, and errors.
+
+### `GET /api/v1/jobs/{job_id}`
+
+Reads one job.
+
+### `GET /api/v1/jobs/{job_id}/events`
+
+Lists progress events for one job.
+
+### `POST /api/v1/jobs/{job_id}/cancel`
+
+Marks a pending or running job as cancelled.
+
+## Research demo endpoints
+
+### `GET /api/v1/demo/research/latest`
+
+Reads the latest completed demo workflow summary, or a built-in sample snapshot if none has run.
+
+### `GET /api/v1/demo/research/{run_id}`
+
+Reads one completed demo workflow summary.
+
+Reads one saved multi-asset run with aggregate metrics and per-symbol ranking.
+
+Backtest assumptions used by single and multi-asset runs:
 
 ```text
 signals use completed daily bars only
@@ -192,7 +419,7 @@ max_positions = 1
 commission and slippage are explicit inputs
 ```
 
-Representative metrics:
+Representative performance metrics:
 
 ```text
 total_return_pct

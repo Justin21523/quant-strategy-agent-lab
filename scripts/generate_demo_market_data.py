@@ -33,6 +33,256 @@ SYMBOLS: tuple[dict[str, object], ...] = (
         "phase": 0.7,
     },
     {
+        "symbol": "ALFA",
+        "name": "Alfa Systems Synthetic Common Stock",
+        "market": "US",
+        "asset_type": "equity",
+        "exchange": "NASDAQ",
+        "currency": "USD",
+        "timezone": "America/New_York",
+        "base_price": 42.0,
+        "annual_drift": 0.22,
+        "base_volume": 8_200_000,
+        "phase": 0.2,
+    },
+    {
+        "symbol": "BRAV",
+        "name": "Bravo Industrials Synthetic Common Stock",
+        "market": "US",
+        "asset_type": "equity",
+        "exchange": "NYSE",
+        "currency": "USD",
+        "timezone": "America/New_York",
+        "base_price": 58.0,
+        "annual_drift": 0.08,
+        "base_volume": 4_600_000,
+        "phase": 0.9,
+    },
+    {
+        "symbol": "CHAR",
+        "name": "Charlie Health Synthetic Common Stock",
+        "market": "US",
+        "asset_type": "equity",
+        "exchange": "NASDAQ",
+        "currency": "USD",
+        "timezone": "America/New_York",
+        "base_price": 24.0,
+        "annual_drift": -0.03,
+        "base_volume": 6_100_000,
+        "phase": 1.3,
+    },
+    {
+        "symbol": "DELT",
+        "name": "Delta Robotics Synthetic Common Stock",
+        "market": "US",
+        "asset_type": "equity",
+        "exchange": "NASDAQ",
+        "currency": "USD",
+        "timezone": "America/New_York",
+        "base_price": 86.0,
+        "annual_drift": 0.28,
+        "base_volume": 9_500_000,
+        "phase": 1.7,
+    },
+    {
+        "symbol": "ECHO",
+        "name": "Echo Retail Synthetic Common Stock",
+        "market": "US",
+        "asset_type": "equity",
+        "exchange": "NYSE",
+        "currency": "USD",
+        "timezone": "America/New_York",
+        "base_price": 31.0,
+        "annual_drift": 0.02,
+        "base_volume": 3_800_000,
+        "phase": 2.1,
+    },
+    {
+        "symbol": "FOXT",
+        "name": "Foxtrot Software Synthetic Common Stock",
+        "market": "US",
+        "asset_type": "equity",
+        "exchange": "NASDAQ",
+        "currency": "USD",
+        "timezone": "America/New_York",
+        "base_price": 115.0,
+        "annual_drift": 0.18,
+        "base_volume": 11_200_000,
+        "phase": 2.4,
+    },
+    {
+        "symbol": "GOLF",
+        "name": "Golf Energy Synthetic Common Stock",
+        "market": "US",
+        "asset_type": "equity",
+        "exchange": "NYSE",
+        "currency": "USD",
+        "timezone": "America/New_York",
+        "base_price": 64.0,
+        "annual_drift": 0.05,
+        "base_volume": 7_400_000,
+        "phase": 2.9,
+    },
+    {
+        "symbol": "HOTL",
+        "name": "Hotel Cloud Synthetic Common Stock",
+        "market": "US",
+        "asset_type": "equity",
+        "exchange": "NASDAQ",
+        "currency": "USD",
+        "timezone": "America/New_York",
+        "base_price": 18.0,
+        "annual_drift": 0.34,
+        "base_volume": 12_800_000,
+        "phase": 3.2,
+    },
+    {
+        "symbol": "INDI",
+        "name": "India Payments Synthetic Common Stock",
+        "market": "US",
+        "asset_type": "equity",
+        "exchange": "NYSE",
+        "currency": "USD",
+        "timezone": "America/New_York",
+        "base_price": 73.0,
+        "annual_drift": 0.12,
+        "base_volume": 5_300_000,
+        "phase": 3.6,
+    },
+    {
+        "symbol": "JULI",
+        "name": "Juliet Biotech Synthetic Common Stock",
+        "market": "US",
+        "asset_type": "equity",
+        "exchange": "NASDAQ",
+        "currency": "USD",
+        "timezone": "America/New_York",
+        "base_price": 39.0,
+        "annual_drift": -0.08,
+        "base_volume": 4_100_000,
+        "phase": 4.0,
+    },
+    {
+        "symbol": "KILO",
+        "name": "Kilo Semiconductor Synthetic Common Stock",
+        "market": "US",
+        "asset_type": "equity",
+        "exchange": "NASDAQ",
+        "currency": "USD",
+        "timezone": "America/New_York",
+        "base_price": 97.0,
+        "annual_drift": 0.31,
+        "base_volume": 10_700_000,
+        "phase": 4.5,
+    },
+    {
+        "symbol": "LIMA",
+        "name": "Lima Logistics Synthetic Common Stock",
+        "market": "US",
+        "asset_type": "equity",
+        "exchange": "NYSE",
+        "currency": "USD",
+        "timezone": "America/New_York",
+        "base_price": 52.0,
+        "annual_drift": 0.09,
+        "base_volume": 6_900_000,
+        "phase": 4.8,
+    },
+    {
+        "symbol": "MIKE",
+        "name": "Mike Materials Synthetic Common Stock",
+        "market": "US",
+        "asset_type": "equity",
+        "exchange": "NYSE",
+        "currency": "USD",
+        "timezone": "America/New_York",
+        "base_price": 44.0,
+        "annual_drift": 0.01,
+        "base_volume": 3_600_000,
+        "phase": 5.1,
+    },
+    {
+        "symbol": "NOVA",
+        "name": "Nova Networks Synthetic Common Stock",
+        "market": "US",
+        "asset_type": "equity",
+        "exchange": "NASDAQ",
+        "currency": "USD",
+        "timezone": "America/New_York",
+        "base_price": 29.0,
+        "annual_drift": 0.24,
+        "base_volume": 9_900_000,
+        "phase": 5.5,
+    },
+    {
+        "symbol": "OSCR",
+        "name": "Oscar Aerospace Synthetic Common Stock",
+        "market": "US",
+        "asset_type": "equity",
+        "exchange": "NYSE",
+        "currency": "USD",
+        "timezone": "America/New_York",
+        "base_price": 121.0,
+        "annual_drift": 0.06,
+        "base_volume": 4_800_000,
+        "phase": 5.9,
+    },
+    {
+        "symbol": "PAPA",
+        "name": "Papa Devices Synthetic Common Stock",
+        "market": "US",
+        "asset_type": "equity",
+        "exchange": "NASDAQ",
+        "currency": "USD",
+        "timezone": "America/New_York",
+        "base_price": 15.0,
+        "annual_drift": 0.42,
+        "base_volume": 14_400_000,
+        "phase": 6.3,
+    },
+    {
+        "symbol": "QUEB",
+        "name": "Quebec Finance Synthetic Common Stock",
+        "market": "US",
+        "asset_type": "equity",
+        "exchange": "NYSE",
+        "currency": "USD",
+        "timezone": "America/New_York",
+        "base_price": 67.0,
+        "annual_drift": 0.07,
+        "base_volume": 5_800_000,
+        "phase": 6.7,
+        "skip_every": 17,
+    },
+    {
+        "symbol": "ROMO",
+        "name": "Romeo Platforms Synthetic Common Stock",
+        "market": "US",
+        "asset_type": "equity",
+        "exchange": "NASDAQ",
+        "currency": "USD",
+        "timezone": "America/New_York",
+        "base_price": 22.0,
+        "annual_drift": 0.15,
+        "base_volume": 7_700_000,
+        "phase": 7.1,
+        "start_offset": 620,
+    },
+    {
+        "symbol": "SIER",
+        "name": "Sierra Consumer Synthetic Common Stock",
+        "market": "US",
+        "asset_type": "equity",
+        "exchange": "NYSE",
+        "currency": "USD",
+        "timezone": "America/New_York",
+        "base_price": 48.0,
+        "annual_drift": 0.04,
+        "base_volume": 3_200_000,
+        "phase": 7.6,
+        "end_offset": 130,
+    },
+    {
         "symbol": "SPY",
         "name": "SPDR S&P 500 ETF Trust",
         "market": "US",
@@ -92,6 +342,17 @@ def weekdays(start: date, end: date) -> list[date]:
 def generate_rows(config: dict[str, object], dates: list[date]) -> list[dict[str, object]]:
     """Create a smooth but non-trivial deterministic OHLCV series."""
 
+    start_offset = int(config.get("start_offset", 0))
+    end_offset = int(config.get("end_offset", 0))
+    skip_every = int(config.get("skip_every", 0))
+    selected_dates = dates[start_offset : len(dates) - end_offset if end_offset else len(dates)]
+    if skip_every > 0:
+        selected_dates = [
+            trade_date
+            for index, trade_date in enumerate(selected_dates)
+            if (index + 1) % skip_every
+        ]
+
     base_price = float(config["base_price"])
     annual_drift = float(config["annual_drift"])
     base_volume = int(config["base_volume"])
@@ -99,7 +360,7 @@ def generate_rows(config: dict[str, object], dates: list[date]) -> list[dict[str
     rows: list[dict[str, object]] = []
     previous_close = base_price
 
-    for index, trade_date in enumerate(dates):
+    for index, trade_date in enumerate(selected_dates):
         trend = math.exp(annual_drift * index / 252)
         cycle = 0.026 * math.sin(index / 18 + phase) + 0.014 * math.cos(index / 47 + phase)
         close = base_price * trend * (1 + cycle)
@@ -110,7 +371,7 @@ def generate_rows(config: dict[str, object], dates: list[date]) -> list[dict[str
         low = min(open_price, close) * (1 - spread * 0.92)
         volume_factor = 1 + 0.24 * math.sin(index / 9 + phase) + 0.11 * math.cos(index / 23)
         volume = max(1_000_000, int(base_volume * volume_factor))
-        adjustment_factor = 0.975 + 0.025 * index / max(1, len(dates) - 1)
+        adjustment_factor = 0.975 + 0.025 * index / max(1, len(selected_dates) - 1)
 
         rows.append(
             {
@@ -169,7 +430,8 @@ def main() -> None:
         "",
         (
             "Phase 1 ships deterministic synthetic daily OHLCV for `AAPL`, `SPY`, "
-            "and `QQQ` so the application can run and be tested without network access."
+            "`QQQ`, and a 20-stock synthetic sample universe so the application can "
+            "run and be tested without network access."
         ),
         "",
         f"- Date range: `{START.isoformat()}` through `{END.isoformat()}`.",

@@ -66,6 +66,18 @@ class BacktestService:
     def run(self, strategy_json: dict[str, Any]) -> BacktestResult:
         steps: list[BacktestAgentStep] = []
         warnings: list[BacktestWarning] = []
+        steps.append(
+            BacktestAgentStep(
+                key="strategy_received",
+                status=BacktestStepStatus.SUCCESS,
+                message="Received Strategy JSON DSL and execution assumptions.",
+                detail={
+                    "strategy_id": strategy_json.get("strategy_id"),
+                    "symbol": strategy_json.get("symbol"),
+                    "timeframe": strategy_json.get("timeframe"),
+                },
+            )
+        )
         self._validate_strategy(strategy_json, steps)
 
         symbol = str(strategy_json["symbol"]).upper()
@@ -168,6 +180,19 @@ class BacktestService:
                     context={"symbol": symbol},
                 )
             )
+        warning_summary = [warning.code for warning in warnings]
+        steps.append(
+            BacktestAgentStep(
+                key="risk_review",
+                status=BacktestStepStatus.WARNING if warnings else BacktestStepStatus.SUCCESS,
+                message=(
+                    f"Reviewed {len(warnings)} warning(s): {', '.join(warning_summary)}."
+                    if warnings
+                    else "No data-quality or execution warnings were produced for this run."
+                ),
+                detail={"warning_count": len(warnings), "warning_codes": warning_summary},
+            )
+        )
         return BacktestResult(
             run_id=result.run_id,
             strategy_id=result.strategy_id,

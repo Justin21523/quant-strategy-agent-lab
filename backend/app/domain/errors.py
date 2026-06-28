@@ -71,3 +71,53 @@ class StrategyDslValidationError(MarketDataError):
 class BacktestExecutionError(MarketDataError):
     code = "backtest_execution_error"
     status_code = 500
+
+
+class UniverseNotFoundError(MarketDataError):
+    code = "universe_not_found"
+    status_code = 404
+
+
+class UniverseRefreshError(MarketDataError):
+    code = "universe_refresh_error"
+    status_code = 502
+
+
+class ScanRunNotFoundError(MarketDataError):
+    code = "scan_run_not_found"
+    status_code = 404
+
+
+class MultiBacktestRunNotFoundError(MarketDataError):
+    code = "multi_backtest_run_not_found"
+    status_code = 404
+
+
+class PortfolioRunNotFoundError(MarketDataError):
+    code = "portfolio_run_not_found"
+    status_code = 404
+
+
+class PortfolioPresetNotFoundError(MarketDataError):
+    code = "portfolio_preset_not_found"
+    status_code = 404
+
+
+class ResearchPresetNotFoundError(MarketDataError):
+    code = "research_preset_not_found"
+    status_code = 404
+
+
+class ResearchRunNotFoundError(MarketDataError):
+    code = "research_run_not_found"
+    status_code = 404
+
+
+class JobNotFoundError(MarketDataError):
+    code = "job_not_found"
+    status_code = 404
+
+
+class ScannerExecutionError(MarketDataError):
+    code = "scanner_execution_error"
+    status_code = 422
