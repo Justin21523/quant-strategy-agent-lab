@@ -1,0 +1,744 @@
+{
+  "summary": {
+    "best_multi_backtest_run_id": "mb_snapshot_buy_hold",
+    "best_portfolio_run_id": "pf_snapshot_trend",
+    "events": [
+      {
+        "finished_at": "2026-01-01T09:34:00+00:00",
+        "id": "load_data",
+        "label": "Load Sample Universe",
+        "message": "Seed deterministic 20-stock research universe.",
+        "metrics": {
+          "symbols": 20
+        },
+        "route": "/market-data",
+        "started_at": "2026-01-01T09:30:00+00:00",
+        "status": "success"
+      },
+      {
+        "finished_at": "2026-01-01T09:34:00+00:00",
+        "id": "sync",
+        "label": "Batch Sync",
+        "message": "Sync cached OHLCV fixture data.",
+        "metrics": {
+          "failed": 0,
+          "processed": 20,
+          "successful": 20
+        },
+        "route": "/jobs",
+        "started_at": "2026-01-01T09:30:00+00:00",
+        "status": "success"
+      },
+      {
+        "finished_at": "2026-01-01T09:34:00+00:00",
+        "id": "quality",
+        "label": "Quality Gates",
+        "message": "Check coverage, missing dates, fixture flags, and indicator readiness.",
+        "metrics": {
+          "coverage_pct": 100.0,
+          "failed_examples": 2
+        },
+        "route": "/data-quality",
+        "started_at": "2026-01-01T09:30:00+00:00",
+        "status": "success"
+      },
+      {
+        "finished_at": "2026-01-01T09:34:00+00:00",
+        "id": "scanner",
+        "label": "Scanner Ranking",
+        "message": "Rank sample stocks with technical indicators.",
+        "metrics": {
+          "matched_symbols": 18,
+          "skipped_symbols": 2
+        },
+        "route": "/parameter-scanner",
+        "started_at": "2026-01-01T09:30:00+00:00",
+        "status": "success"
+      },
+      {
+        "finished_at": "2026-01-01T09:34:00+00:00",
+        "id": "portfolio_matrix",
+        "label": "Portfolio Matrix",
+        "message": "Run equal-weight preset rebalance tests.",
+        "metrics": {
+          "runs": 1
+        },
+        "route": "/portfolio-rebalance",
+        "started_at": "2026-01-01T09:30:00+00:00",
+        "status": "success"
+      },
+      {
+        "finished_at": "2026-01-01T09:34:00+00:00",
+        "id": "strategy_matrix",
+        "label": "Strategy Matrix",
+        "message": "Compare strategy templates across scanner candidates.",
+        "metrics": {
+          "runs": 1
+        },
+        "route": "/comparison",
+        "started_at": "2026-01-01T09:30:00+00:00",
+        "status": "success"
+      },
+      {
+        "finished_at": "2026-01-01T09:34:00+00:00",
+        "id": "performance",
+        "label": "Performance Report",
+        "message": "Summarize returns, drawdown, Sharpe, turnover, and failures.",
+        "metrics": {
+          "best_portfolio": "trend_momentum"
+        },
+        "route": "/performance-report",
+        "started_at": "2026-01-01T09:30:00+00:00",
+        "status": "success"
+      },
+      {
+        "finished_at": "2026-01-01T09:34:00+00:00",
+        "id": "complete",
+        "label": "Complete",
+        "message": "Research workflow is ready for review.",
+        "metrics": {
+          "run_status": "success"
+        },
+        "route": "/",
+        "started_at": "2026-01-01T09:30:00+00:00",
+        "status": "success"
+      }
+    ],
+    "portfolio_matrix": [
+      {
+        "annual_return_pct": 15.8,
+        "annual_volatility_pct": 13.1,
+        "drawdown_curve": [
+          {
+            "date": "2023-01-31",
+            "drawdown_pct": 0
+          },
+          {
+            "date": "2023-02-28",
+            "drawdown_pct": -0.8
+          },
+          {
+            "date": "2023-03-31",
+            "drawdown_pct": -1.5
+          },
+          {
+            "date": "2023-04-28",
+            "drawdown_pct": -0.4
+          },
+          {
+            "date": "2023-05-31",
+            "drawdown_pct": 0
+          },
+          {
+            "date": "2023-06-30",
+            "drawdown_pct": -0.6
+          },
+          {
+            "date": "2023-08-31",
+            "drawdown_pct": -1.1
+          },
+          {
+            "date": "2023-09-29",
+            "drawdown_pct": 0
+          }
+        ],
+        "equity_curve": [
+          {
+            "date": "2023-01-31",
+            "drawdown_pct": 0.0,
+            "equity": 101200
+          },
+          {
+            "date": "2023-02-28",
+            "drawdown_pct": 0.0,
+            "equity": 102900
+          },
+          {
+            "date": "2023-03-31",
+            "drawdown_pct": 0.0,
+            "equity": 101800
+          },
+          {
+            "date": "2023-04-28",
+            "drawdown_pct": 0.0,
+            "equity": 105600
+          },
+          {
+            "date": "2023-05-31",
+            "drawdown_pct": 0.0,
+            "equity": 108200
+          },
+          {
+            "date": "2023-06-30",
+            "drawdown_pct": 0.0,
+            "equity": 110100
+          },
+          {
+            "date": "2023-08-31",
+            "drawdown_pct": 0.0,
+            "equity": 109500
+          },
+          {
+            "date": "2023-09-29",
+            "drawdown_pct": 0.0,
+            "equity": 112400
+          }
+        ],
+        "final_equity": 112400,
+        "frequency": "monthly",
+        "max_drawdown_pct": -5.6,
+        "preset": "trend_momentum",
+        "rebalance_count": 8,
+        "run_id": "pf_snapshot_trend",
+        "sharpe_ratio": 1.18,
+        "skipped_period_count": 0,
+        "top_n": 8,
+        "total_return_pct": 12.4,
+        "turnover_pct": 42.5
+      },
+      {
+        "annual_return_pct": 11.2,
+        "annual_volatility_pct": 9.7,
+        "drawdown_curve": [
+          {
+            "date": "2023-01-31",
+            "drawdown_pct": 0
+          },
+          {
+            "date": "2023-02-28",
+            "drawdown_pct": -0.3
+          },
+          {
+            "date": "2023-03-31",
+            "drawdown_pct": -0.8
+          },
+          {
+            "date": "2023-04-28",
+            "drawdown_pct": -0.2
+          },
+          {
+            "date": "2023-05-31",
+            "drawdown_pct": 0
+          },
+          {
+            "date": "2023-06-30",
+            "drawdown_pct": -0.5
+          },
+          {
+            "date": "2023-08-31",
+            "drawdown_pct": -0.7
+          },
+          {
+            "date": "2023-09-29",
+            "drawdown_pct": 0
+          }
+        ],
+        "equity_curve": [
+          {
+            "date": "2023-01-31",
+            "drawdown_pct": 0.0,
+            "equity": 100800
+          },
+          {
+            "date": "2023-02-28",
+            "drawdown_pct": 0.0,
+            "equity": 101700
+          },
+          {
+            "date": "2023-03-31",
+            "drawdown_pct": 0.0,
+            "equity": 102600
+          },
+          {
+            "date": "2023-04-28",
+            "drawdown_pct": 0.0,
+            "equity": 104100
+          },
+          {
+            "date": "2023-05-31",
+            "drawdown_pct": 0.0,
+            "equity": 105300
+          },
+          {
+            "date": "2023-06-30",
+            "drawdown_pct": 0.0,
+            "equity": 106700
+          },
+          {
+            "date": "2023-08-31",
+            "drawdown_pct": 0.0,
+            "equity": 107500
+          },
+          {
+            "date": "2023-09-29",
+            "drawdown_pct": 0.0,
+            "equity": 108900
+          }
+        ],
+        "final_equity": 108900,
+        "frequency": "monthly",
+        "max_drawdown_pct": -3.9,
+        "preset": "low_volatility_trend",
+        "rebalance_count": 8,
+        "run_id": "pf_snapshot_low_vol",
+        "sharpe_ratio": 1.04,
+        "skipped_period_count": 0,
+        "top_n": 10,
+        "total_return_pct": 8.9,
+        "turnover_pct": 31.2
+      },
+      {
+        "annual_return_pct": 5.4,
+        "annual_volatility_pct": 15.3,
+        "drawdown_curve": [
+          {
+            "date": "2023-01-31",
+            "drawdown_pct": 0
+          },
+          {
+            "date": "2023-02-28",
+            "drawdown_pct": -2.2
+          },
+          {
+            "date": "2023-03-31",
+            "drawdown_pct": -1.1
+          },
+          {
+            "date": "2023-04-28",
+            "drawdown_pct": 0
+          },
+          {
+            "date": "2023-05-31",
+            "drawdown_pct": -1.4
+          },
+          {
+            "date": "2023-06-30",
+            "drawdown_pct": 0
+          },
+          {
+            "date": "2023-08-31",
+            "drawdown_pct": -1.9
+          },
+          {
+            "date": "2023-09-29",
+            "drawdown_pct": -0.3
+          }
+        ],
+        "equity_curve": [
+          {
+            "date": "2023-01-31",
+            "drawdown_pct": 0.0,
+            "equity": 100300
+          },
+          {
+            "date": "2023-02-28",
+            "drawdown_pct": -1.7,
+            "equity": 98300
+          },
+          {
+            "date": "2023-03-31",
+            "drawdown_pct": 0.0,
+            "equity": 100600
+          },
+          {
+            "date": "2023-04-28",
+            "drawdown_pct": 0.0,
+            "equity": 102000
+          },
+          {
+            "date": "2023-05-31",
+            "drawdown_pct": 0.0,
+            "equity": 101100
+          },
+          {
+            "date": "2023-06-30",
+            "drawdown_pct": 0.0,
+            "equity": 103700
+          },
+          {
+            "date": "2023-08-31",
+            "drawdown_pct": 0.0,
+            "equity": 102600
+          },
+          {
+            "date": "2023-09-29",
+            "drawdown_pct": 0.0,
+            "equity": 104200
+          }
+        ],
+        "final_equity": 104200,
+        "frequency": "weekly",
+        "max_drawdown_pct": -7.8,
+        "preset": "oversold_watchlist",
+        "rebalance_count": 38,
+        "run_id": "pf_snapshot_oversold",
+        "sharpe_ratio": 0.62,
+        "skipped_period_count": 1,
+        "top_n": 5,
+        "total_return_pct": 4.2,
+        "turnover_pct": 88.9
+      }
+    ],
+    "quality": {
+      "coverage_pct": 100.0,
+      "covered_symbols": 20,
+      "failed_examples": [
+        {
+          "cached_bar_count": 162,
+          "missing_weekday_count": 620,
+          "symbol": "ROMO",
+          "warnings": ["insufficient_sma_200", "insufficient_return_252d"]
+        },
+        {
+          "cached_bar_count": 736,
+          "missing_weekday_count": 46,
+          "symbol": "QUEB",
+          "warnings": ["contains_fixture_data"]
+        }
+      ],
+      "fixture_symbols": 20,
+      "member_count": 20,
+      "return_252d_ready_symbols": 18,
+      "sma_200_ready_symbols": 18,
+      "symbols": [
+        {
+          "cached_bar_count": 736,
+          "contains_fixture_data": true,
+          "exchange": "NYSE",
+          "first_cached_date": "2023-01-03",
+          "last_cached_date": "2025-12-31",
+          "missing_weekday_count": 0,
+          "name": "AAPL Synthetic Equity",
+          "providers": ["csv"],
+          "supports_return_252d": true,
+          "supports_sma_200": true,
+          "symbol": "AAPL",
+          "warnings": []
+        },
+        {
+          "cached_bar_count": 718,
+          "contains_fixture_data": true,
+          "exchange": "NYSE",
+          "first_cached_date": "2023-01-03",
+          "last_cached_date": "2025-12-31",
+          "missing_weekday_count": 6,
+          "name": "ALFA Synthetic Equity",
+          "providers": ["csv"],
+          "supports_return_252d": true,
+          "supports_sma_200": true,
+          "symbol": "ALFA",
+          "warnings": ["contains_fixture_data"]
+        },
+        {
+          "cached_bar_count": 700,
+          "contains_fixture_data": true,
+          "exchange": "NYSE",
+          "first_cached_date": "2023-01-03",
+          "last_cached_date": "2025-12-31",
+          "missing_weekday_count": 12,
+          "name": "BRAV Synthetic Equity",
+          "providers": ["csv"],
+          "supports_return_252d": true,
+          "supports_sma_200": true,
+          "symbol": "BRAV",
+          "warnings": ["contains_fixture_data"]
+        },
+        {
+          "cached_bar_count": 682,
+          "contains_fixture_data": true,
+          "exchange": "NYSE",
+          "first_cached_date": "2023-01-03",
+          "last_cached_date": "2025-12-31",
+          "missing_weekday_count": 18,
+          "name": "CHAR Synthetic Equity",
+          "providers": ["csv"],
+          "supports_return_252d": true,
+          "supports_sma_200": true,
+          "symbol": "CHAR",
+          "warnings": ["contains_fixture_data"]
+        },
+        {
+          "cached_bar_count": 736,
+          "contains_fixture_data": true,
+          "exchange": "NYSE",
+          "first_cached_date": "2023-01-03",
+          "last_cached_date": "2025-12-31",
+          "missing_weekday_count": 24,
+          "name": "DELT Synthetic Equity",
+          "providers": ["csv"],
+          "supports_return_252d": true,
+          "supports_sma_200": true,
+          "symbol": "DELT",
+          "warnings": ["contains_fixture_data"]
+        },
+        {
+          "cached_bar_count": 718,
+          "contains_fixture_data": true,
+          "exchange": "NYSE",
+          "first_cached_date": "2023-01-03",
+          "last_cached_date": "2025-12-31",
+          "missing_weekday_count": 0,
+          "name": "ECHO Synthetic Equity",
+          "providers": ["csv"],
+          "supports_return_252d": true,
+          "supports_sma_200": true,
+          "symbol": "ECHO",
+          "warnings": []
+        },
+        {
+          "cached_bar_count": 700,
+          "contains_fixture_data": true,
+          "exchange": "NYSE",
+          "first_cached_date": "2023-01-03",
+          "last_cached_date": "2025-12-31",
+          "missing_weekday_count": 6,
+          "name": "FOXT Synthetic Equity",
+          "providers": ["csv"],
+          "supports_return_252d": true,
+          "supports_sma_200": true,
+          "symbol": "FOXT",
+          "warnings": ["contains_fixture_data"]
+        },
+        {
+          "cached_bar_count": 682,
+          "contains_fixture_data": true,
+          "exchange": "NYSE",
+          "first_cached_date": "2023-01-03",
+          "last_cached_date": "2025-12-31",
+          "missing_weekday_count": 12,
+          "name": "GOLF Synthetic Equity",
+          "providers": ["csv"],
+          "supports_return_252d": true,
+          "supports_sma_200": true,
+          "symbol": "GOLF",
+          "warnings": ["contains_fixture_data"]
+        },
+        {
+          "cached_bar_count": 736,
+          "contains_fixture_data": true,
+          "exchange": "NYSE",
+          "first_cached_date": "2023-01-03",
+          "last_cached_date": "2025-12-31",
+          "missing_weekday_count": 18,
+          "name": "HOTL Synthetic Equity",
+          "providers": ["csv"],
+          "supports_return_252d": true,
+          "supports_sma_200": true,
+          "symbol": "HOTL",
+          "warnings": ["contains_fixture_data"]
+        },
+        {
+          "cached_bar_count": 718,
+          "contains_fixture_data": true,
+          "exchange": "NYSE",
+          "first_cached_date": "2023-01-03",
+          "last_cached_date": "2025-12-31",
+          "missing_weekday_count": 24,
+          "name": "KILO Synthetic Equity",
+          "providers": ["csv"],
+          "supports_return_252d": true,
+          "supports_sma_200": true,
+          "symbol": "KILO",
+          "warnings": ["contains_fixture_data"]
+        },
+        {
+          "cached_bar_count": 700,
+          "contains_fixture_data": true,
+          "exchange": "NYSE",
+          "first_cached_date": "2023-01-03",
+          "last_cached_date": "2025-12-31",
+          "missing_weekday_count": 0,
+          "name": "NOVA Synthetic Equity",
+          "providers": ["csv"],
+          "supports_return_252d": true,
+          "supports_sma_200": true,
+          "symbol": "NOVA",
+          "warnings": []
+        },
+        {
+          "cached_bar_count": 682,
+          "contains_fixture_data": true,
+          "exchange": "NYSE",
+          "first_cached_date": "2023-01-03",
+          "last_cached_date": "2025-12-31",
+          "missing_weekday_count": 6,
+          "name": "PAPA Synthetic Equity",
+          "providers": ["csv"],
+          "supports_return_252d": true,
+          "supports_sma_200": true,
+          "symbol": "PAPA",
+          "warnings": ["contains_fixture_data"]
+        },
+        {
+          "cached_bar_count": 162,
+          "contains_fixture_data": true,
+          "exchange": "NYSE",
+          "first_cached_date": "2025-05-19",
+          "last_cached_date": "2025-12-31",
+          "missing_weekday_count": 620,
+          "name": "ROMO Synthetic Equity",
+          "providers": ["csv"],
+          "supports_return_252d": false,
+          "supports_sma_200": false,
+          "symbol": "ROMO",
+          "warnings": ["insufficient_sma_200", "insufficient_return_252d"]
+        },
+        {
+          "cached_bar_count": 118,
+          "contains_fixture_data": true,
+          "exchange": "NYSE",
+          "first_cached_date": "2025-07-21",
+          "last_cached_date": "2025-12-31",
+          "missing_weekday_count": 664,
+          "name": "SIER Synthetic Equity",
+          "providers": ["csv"],
+          "supports_return_252d": false,
+          "supports_sma_200": false,
+          "symbol": "SIER",
+          "warnings": ["insufficient_sma_200", "insufficient_return_252d"]
+        }
+      ]
+    },
+    "run_id": "demo_snapshot",
+    "scanner": {
+      "matched_symbols": 18,
+      "results": [
+        {
+          "atr_pct": 3.1,
+          "name": "PAPA Synthetic Equity",
+          "rank": 1,
+          "return_20d_pct": 5.1,
+          "return_252d_pct": 18.8,
+          "return_60d_pct": 21.4,
+          "rsi_14": 63.2,
+          "score": 20.315,
+          "symbol": "PAPA",
+          "volume_ratio_20d": 1.32
+        },
+        {
+          "atr_pct": 2.7,
+          "name": "HOTL Synthetic Equity",
+          "rank": 2,
+          "return_20d_pct": 4.4,
+          "return_252d_pct": 15.6,
+          "return_60d_pct": 18.6,
+          "rsi_14": 58.7,
+          "score": 17.655,
+          "symbol": "HOTL",
+          "volume_ratio_20d": 1.18
+        },
+        {
+          "atr_pct": 3.8,
+          "name": "DELT Synthetic Equity",
+          "rank": 3,
+          "return_20d_pct": 3.9,
+          "return_252d_pct": 13.7,
+          "return_60d_pct": 15.8,
+          "rsi_14": 61.1,
+          "score": 14.47,
+          "symbol": "DELT",
+          "volume_ratio_20d": 1.06
+        },
+        {
+          "atr_pct": 2.4,
+          "name": "KILO Synthetic Equity",
+          "rank": 4,
+          "return_20d_pct": 2.8,
+          "return_252d_pct": 12.9,
+          "return_60d_pct": 14.9,
+          "rsi_14": 54.8,
+          "score": 14.06,
+          "symbol": "KILO",
+          "volume_ratio_20d": 0.98
+        },
+        {
+          "atr_pct": 2.1,
+          "name": "NOVA Synthetic Equity",
+          "rank": 5,
+          "return_20d_pct": 1.9,
+          "return_252d_pct": 10.6,
+          "return_60d_pct": 12.1,
+          "rsi_14": 49.2,
+          "score": 11.365,
+          "symbol": "NOVA",
+          "volume_ratio_20d": 1.12
+        },
+        {
+          "atr_pct": 4.2,
+          "name": "ALFA Synthetic Equity",
+          "rank": 6,
+          "return_20d_pct": 1.4,
+          "return_252d_pct": 8.4,
+          "return_60d_pct": 10.3,
+          "rsi_14": 52.5,
+          "score": 8.83,
+          "symbol": "ALFA",
+          "volume_ratio_20d": 0.92
+        }
+      ],
+      "run_id": "scan_snapshot",
+      "skipped": [
+        {
+          "cached_rows": 162,
+          "reason": "quality_gate_failed",
+          "required_rows": 200,
+          "symbol": "ROMO"
+        },
+        {
+          "cached_rows": 118,
+          "reason": "insufficient_cached_rows",
+          "required_rows": 200,
+          "symbol": "SIER"
+        }
+      ],
+      "skipped_symbols": 2,
+      "top_symbols": ["PAPA", "HOTL", "DELT", "KILO", "NOVA", "ALFA"]
+    },
+    "status": "snapshot",
+    "strategy_comparison": [
+      {
+        "average_total_return_pct": 9.8,
+        "best_symbol": "PAPA",
+        "best_total_return_pct": 15.6,
+        "failed_symbols": 0,
+        "run_id": "mb_snapshot_buy_hold",
+        "successful_symbols": 6,
+        "template_id": "buy_and_hold",
+        "worst_symbol": "CHAR",
+        "worst_total_return_pct": 1.9
+      },
+      {
+        "average_total_return_pct": 6.1,
+        "best_symbol": "DELT",
+        "best_total_return_pct": 12.3,
+        "failed_symbols": 0,
+        "run_id": "mb_snapshot_ma",
+        "successful_symbols": 6,
+        "template_id": "ma_crossover",
+        "worst_symbol": "JULI",
+        "worst_total_return_pct": -2.4
+      },
+      {
+        "average_total_return_pct": 7.3,
+        "best_symbol": "KILO",
+        "best_total_return_pct": 14.2,
+        "failed_symbols": 0,
+        "run_id": "mb_snapshot_macd",
+        "successful_symbols": 6,
+        "template_id": "macd_trend_following",
+        "worst_symbol": "ECHO",
+        "worst_total_return_pct": -1.1
+      }
+    ],
+    "sync": {
+      "failed": 0,
+      "processed": 20,
+      "successful": 20
+    },
+    "universe": {
+      "member_count": 20,
+      "symbols": ["AAPL", "ALFA", "BRAV", "CHAR", "DELT", "ECHO", "FOXT", "GOLF"],
+      "universe_id": "demo_research_sample"
+    }
+  }
+}
