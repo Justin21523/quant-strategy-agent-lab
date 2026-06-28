@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Q logo">
+  <rect width="64" height="64" rx="14" fill="#0b1220"/>
+  <path d="M16 42V18h15c10 0 17 5 17 14 0 6-3 10-8 12l7 8H35l-5-7h-4v7H16zm10-7h5c4 0 7-1 7-4s-3-4-7-4h-5z" fill="#62e6c8"/>
+</svg>

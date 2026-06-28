@@ -89,6 +89,16 @@ npm run build:pages
 npm run showcase:capture
 ```
 
+The committed Pages snapshot lives in `docs/pages/`. After rebuilding `frontend/dist`,
+copy that output into `docs/pages/` before pushing a new public demo:
+
+```bash
+rm -rf ../docs/pages
+mkdir -p ../docs/pages
+cp -a dist/. ../docs/pages/
+touch ../docs/pages/.nojekyll
+```
+
 `VITE_STATIC_DEMO=true` routes the frontend API client to deterministic fixture snapshots under `frontend/public/demo-data/`. This keeps the public demo fully static while the local development workflow still uses FastAPI, SQLite, and the normal `/api/v1` contract.
 
 ## Start on Linux
